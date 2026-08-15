@@ -272,6 +272,32 @@ const catalog: Record<string, ProductOfferBase[]> = {
   ],
   mouse: [
     {
+      id: "demo-mouse-5",
+      title: "Slim Silent USB Optical Mouse (Demo)",
+      merchant: "AgentLane Demo",
+      price: 5,
+      rating: null,
+      reviewCount: null,
+      delivery: null,
+      artColor: "#cddfd9",
+      icon: "mouse",
+      badge: "5 XSGD demo",
+      reason:
+        "A deterministic demo option for testing the minimum Fuji sandbox card value.",
+      requestFitScore: 96,
+      source: {
+        name: "AgentLane local demo catalogue",
+        authority: "Demo catalogue",
+        checkedMinutesAgo: 0,
+      },
+      seller: {
+        name: "Demo seller",
+        successfulTransactions: null,
+        paymentAddressChanges: null,
+        monitoringDays: null,
+      },
+    },
+    {
       id: "m331",
       title: "Logitech M331 Silent",
       merchant: "Lazada",

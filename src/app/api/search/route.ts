@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { searchCatalog } from "@/lib/catalog";
 import { fetchBuyWhereListings } from "@/lib/buywhere-listings";
+import { effectiveSearchBudget } from "@/lib/prompt-budget";
 import {
+  buildLiveProcurementResults,
   generateProcurementSimulation,
   reviewLiveProcurementListings,
 } from "@/lib/openai-procurement";
@@ -27,25 +29,68 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   const message = body.message.trim().slice(0, 1200);
-  if (process.env.OPENAI_API_KEY && process.env.BUYWHERE_API_KEY) {
+  const searchBudget = effectiveSearchBudget(message, body.maxBudget);
+  if (process.env.BUYWHERE_API_KEY) {
     try {
-      const listings = await fetchBuyWhereListings(message, body.maxBudget);
+      const listings = await fetchBuyWhereListings(
+        message,
+        searchBudget,
+        "shopee",
+      );
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const reviewed = await reviewLiveProcurementListings(
+            message,
+            searchBudget,
+            listings,
+          );
+          if (reviewed.offers.length > 0)
+            return NextResponse.json(reviewed, {
+              headers: { "cache-control": "no-store" },
+            });
+          console.warn(
+            "OpenAI selected no BuyWhere listings; ranking the live listings locally.",
+          );
+        } catch (error) {
+          console.error(
+            "OpenAI live review failed; ranking the BuyWhere listings locally.",
+            safeErrorMessage(error),
+          );
+        }
+      }
       return NextResponse.json(
-        await reviewLiveProcurementListings(message, body.maxBudget, listings),
+        buildLiveProcurementResults(message, searchBudget, listings),
         { headers: { "cache-control": "no-store" } },
       );
     } catch (error) {
       console.error(
-        "Live BuyWhere procurement failed; using OpenAI simulation fallback.",
+        "Live BuyWhere procurement failed.",
         safeErrorMessage(error),
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Live product search is temporarily unavailable. Please try again.",
+        },
+        {
+          status: 502,
+          headers: { "cache-control": "no-store" },
+        },
       );
     }
   }
   if (process.env.OPENAI_API_KEY) {
     try {
-      return NextResponse.json(
-        await generateProcurementSimulation(message, body.maxBudget),
-        { headers: { "cache-control": "no-store" } },
+      const simulation = await generateProcurementSimulation(
+        message,
+        searchBudget,
+      );
+      if (simulation.offers.length > 0)
+        return NextResponse.json(simulation, {
+          headers: { "cache-control": "no-store" },
+        });
+      console.warn(
+        "OpenAI procurement simulation returned no ranked offers; using the local demo catalogue.",
       );
     } catch (error) {
       console.error(
@@ -55,7 +100,7 @@ export async function POST(request: Request) {
     }
   }
   await new Promise((resolve) => setTimeout(resolve, 650));
-  return NextResponse.json(searchCatalog(message, body.maxBudget), {
+  return NextResponse.json(searchCatalog(message, searchBudget), {
     headers: { "cache-control": "no-store" },
   });
 }

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgentLane Card Companion</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg></span>
+        <div><p class="eyebrow">AgentLane</p><h1>Card Companion</h1></div>
+      </header>
+
+      <section id="unsupported" class="state" hidden>
+        <span class="state-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg></span>
+        <h2>Open AgentLane or checkout</h2>
+        <p>Use this companion on the StraitsX sandbox card page or Shopee Singapore checkout.</p>
+      </section>
+
+      <section id="agentlane" class="state" hidden>
+        <span class="state-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg></span>
+        <h2>Generate the procurement card</h2>
+        <p>Select a product in AgentLane and approve the budget-limited Fuji sandbox card. Reopen this extension on the success screen to save it.</p>
+        <button id="show-recovery" class="button secondary" type="button">Recover previous card</button>
+        <form id="recovery-form" class="recovery-form" hidden>
+          <div class="recovery-heading">
+            <strong>Recover from StraitsX</strong>
+            <span>Fuji sandbox only</span>
+          </div>
+          <label for="recovery-card-id">Card ID</label>
+          <input id="recovery-card-id" name="card-id" autocomplete="off" placeholder="01K…" required />
+          <label for="recovery-settlement">Settlement transaction</label>
+          <input id="recovery-settlement" name="settlement" autocomplete="off" placeholder="0x…" required />
+          <label for="recovery-wallet">Issuing wallet</label>
+          <input id="recovery-wallet" name="wallet" autocomplete="off" placeholder="0x…" required />
+          <label for="recovery-amount">Card value (XSGD)</label>
+          <input id="recovery-amount" name="amount" type="number" min="5" max="30" step="0.01" value="5" required />
+          <button id="recover-card" class="button primary" type="submit">Recover and save card</button>
+          <p class="permission-note">The issuer verifies these references. Returned test-card details are stored only in this extension.</p>
+          <p id="recovery-error" class="error" role="alert" hidden></p>
+        </form>
+      </section>
+
+      <section id="issued-card" hidden>
+        <div class="result-banner pass">
+          <span class="state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9"/></svg></span>
+          <div><p class="eyebrow">Saved for this session</p><h2>Sandbox Visa issued</h2></div>
+        </div>
+        <dl class="issued-meta">
+          <div><dt>Value</dt><dd id="issued-card-value"></dd></div>
+          <div><dt>Settlement</dt><dd id="issued-card-settlement"></dd></div>
+        </dl>
+        <p class="manual-note">Open the secure StraitsX page, reveal the sandbox details, then use this extension to capture the card fields.</p>
+        <a id="open-issued-card" class="button primary" href="#" target="_blank" rel="noreferrer">Open secure card</a>
+        <button id="forget-issued-card" class="text-button" type="button">Forget issued card</button>
+      </section>
+
+      <section id="capture" hidden>
+        <div class="packet-card">
+          <span class="pill">Fuji sandbox</span>
+          <h2>Capture this test card</h2>
+          <p class="section-copy">Card fields stay in extension memory for this browser session and are cleared when Chrome or the extension restarts.</p>
+        </div>
+        <button id="capture-card" class="button primary" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg>Capture sandbox card</button>
+        <p id="capture-error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section id="no-card" class="state" hidden>
+        <span class="state-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14v10H5z"/><path d="M9 15h6M12 12v6"/></svg></span>
+        <h2>No sandbox card captured</h2>
+        <p>Generate the card in AgentLane, then open this extension on the successful issuance screen to save it.</p>
+      </section>
+
+      <section id="live-price" hidden>
+        <div class="packet-card">
+          <span class="pill">Live Shopee page</span>
+          <h2 id="quote-heading">Refresh the last-mile price</h2>
+          <p id="quote-copy" class="section-copy">Reads the price rendered in this tab, including the selected cart item or checkout total.</p>
+        </div>
+        <button id="refresh-price" class="button primary" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M18 12a6 6 0 0 0-10.5-4M6 12a6 6 0 0 0 10.5 4"/></svg>Refresh live price</button>
+        <button id="prepare-checkout" class="button primary checkout-action" type="button" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg>Prepare card checkout</button>
+        <div id="automation-progress" class="automation-progress" role="status" aria-live="polite" hidden>
+          <div class="automation-heading"><span>Checkout preparation</span><strong id="automation-state">Starting…</strong></div>
+          <ol>
+            <li id="automation-step-total"><span>1</span>Verify live total</li>
+            <li id="automation-step-payment"><span>2</span>Open new-card form</li>
+            <li id="automation-step-card"><span>3</span>Fill sandbox Visa</li>
+          </ol>
+          <p id="automation-message">Keeping final order submission under your control.</p>
+        </div>
+        <div id="quote-result" class="quote-result" hidden>
+          <div><span id="quote-label">Live price</span><strong id="quote-price"></strong></div>
+          <span id="quote-age">Just now</span>
+        </div>
+        <div id="checkout-captured" class="checkout-captured" hidden aria-live="polite">
+          <span class="state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9"/></svg></span>
+          <div><strong>Checkout captured</strong><span id="checkout-detail"></span></div>
+        </div>
+        <div id="checkout-card-state" class="guide" hidden>
+          <h2 id="checkout-card-heading">Sandbox card ready</h2>
+          <p id="checkout-card-copy"></p>
+        </div>
+        <a id="use-agentlane" class="button secondary" href="#" target="_blank" rel="noreferrer" hidden>Return verified price to AgentLane</a>
+        <p id="quote-error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section id="card-ready" hidden>
+        <div class="virtual-card" aria-label="Captured sandbox card">
+          <div class="virtual-card-top"><span>AgentLane test Visa</span><span>FUJI</span></div>
+          <p id="card-last-four" class="card-number"></p>
+          <div class="virtual-card-bottom"><span id="card-name"></span><span id="card-expiry"></span></div>
+        </div>
+        <p class="vault-note">Stored locally until you choose Forget. Sensitive details are hidden by default.</p>
+        <button id="reveal-card" class="button secondary" type="button" aria-expanded="false" aria-controls="sensitive-card-details">Reveal card details</button>
+        <div id="sensitive-card-details" class="sensitive-details" hidden aria-live="polite">
+          <div><span>Card number</span><strong id="card-full-number"></strong></div>
+          <div><span>CVV</span><strong id="card-cvv"></strong></div>
+        </div>
+        <div id="checkout-binding" class="binding" hidden>
+          <span>Bound checkout</span>
+          <strong id="bound-checkout-total"></strong>
+          <small id="bound-checkout-age"></small>
+        </div>
+        <div id="checkout-guide" class="guide" hidden><h2>Card ready for checkout</h2><p>Capture the Shopee checkout first, choose <strong>Credit/Debit Card</strong> and <strong>Pay with new card</strong>, then open this extension again.</p></div>
+        <button id="fill-card" class="button primary" type="button" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg>Fill sandbox card</button>
+        <p id="fill-note" class="permission-note" hidden>This sends the stored sandbox card to Shopee's new-card form. Submit and Place Order remain untouched.</p>
+        <p id="fill-error" class="error" role="alert" hidden></p>
+        <button id="forget-card" class="text-button" type="button">Forget captured card</button>
+      </section>
+
+      <section id="complete" hidden aria-live="polite">
+        <div class="result-banner pass"><span class="state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9"/></svg></span><div><p class="eyebrow">Autofill complete</p><h2>Four card fields filled</h2></div></div>
+        <p class="manual-note"><strong>No payment was submitted.</strong> Review the amount, delivery details, and card form. Place Order remains under your control.</p>
+        <button id="fill-again" class="button secondary" type="button">Fill again</button>
+        <button id="forget-card-complete" class="text-button" type="button">Forget captured card</button>
+      </section>
+
+      <footer>Sandbox cards cannot spend real money. The test card stays in this extension until you forget it; checkout data remains session-only.</footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

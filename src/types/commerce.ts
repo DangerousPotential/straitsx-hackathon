@@ -1,6 +1,6 @@
 export type DataSource = {
   name:string;
-  authority:"Official marketplace feed"|"Verified merchant listing"|"Live public listing";
+  authority:"Official marketplace feed"|"Verified merchant listing"|"Live public listing"|"Demo catalogue";
   checkedMinutesAgo:number;
 };
 
@@ -39,7 +39,7 @@ export type ProductOfferBase = {
   listingUrl?:string;
   artColor:string;
   icon:"earbuds"|"mouse"|"speaker";
-  badge:"Best match"|"Best value"|"Fastest";
+  badge:"Best match"|"Best value"|"Fastest"|"5 XSGD demo";
   reason:string;
   requestFitScore?:number;
   source:DataSource;
@@ -49,5 +49,5 @@ export type ProductOffer = ProductOfferBase & { ranking:OfferRanking };
 export type ShoppingIntent = { query:string; maxBudget:number; priorities:string[]; requirements:string[] };
 export type TrustPolicy = { maxDataAgeMinutes:number; minimumSuccessfulTransactions:number; maximumAddressChangesPer90Days:number };
 export type BudgetPolicy = { userTransactionLimitSgd:number; providerTransactionLimitSgd:number; effectiveTransactionLimitSgd:number; estimatedFeesSgd:number };
-export type ResultGeneration = { mode:"live_api_review"|"openai_simulation"|"catalog_fallback"; disclaimer:string };
+export type ResultGeneration = { mode:"live_api"|"live_api_review"|"openai_simulation"|"catalog_fallback"; disclaimer:string };
 export type SearchResponse = { intent:ShoppingIntent; offers:ProductOffer[]; trustPolicy:TrustPolicy; budgetPolicy:BudgetPolicy; generation:ResultGeneration; screenedOut:number };

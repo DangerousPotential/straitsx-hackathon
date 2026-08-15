@@ -204,6 +204,132 @@ function offerId(title: string, index: number) {
   }-${index + 1}`;
 }
 
+const searchStopWords = new Set([
+  "a",
+  "an",
+  "and",
+  "for",
+  "in",
+  "of",
+  "on",
+  "or",
+  "the",
+  "to",
+  "under",
+  "with",
+]);
+
+function searchTokens(value: string) {
+  return new Set(
+    value
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((token) => token.length > 1 && !searchStopWords.has(token)),
+  );
+}
+
+function deterministicRequestFit(message: string, title: string) {
+  const requested = searchTokens(message);
+  const offered = searchTokens(title);
+  if (!requested.size) return 75;
+  const matches = [...requested].filter((token) => offered.has(token)).length;
+  return Math.round(Math.min(96, 58 + (matches / requested.size) * 38));
+}
+
+function inferredPriorities(message: string) {
+  const priorities: string[] = [];
+  if (/review|quality|reliable|durable/i.test(message)) priorities.push("Quality");
+  if (/fast|delivery|today|tomorrow/i.test(message)) priorities.push("Delivery");
+  if (/budget|price|cheap|value|under|below/i.test(message)) priorities.push("Value");
+  return priorities.length ? priorities.slice(0, 3) : ["Request fit", "Value"];
+}
+
+function inferredIcon(value: string): ProductOfferBase["icon"] {
+  if (/mouse|mice/i.test(value)) return "mouse";
+  if (/speaker/i.test(value)) return "speaker";
+  return "earbuds";
+}
+
+export function buildLiveProcurementResults(
+  message: string,
+  selectedBudget: number | undefined,
+  batch: LiveListingBatch,
+): SearchResponse {
+  const budgetPolicy = getBudgetPolicy();
+  const policyMaximumProductPrice = Math.max(
+    0,
+    budgetPolicy.effectiveTransactionLimitSgd - budgetPolicy.estimatedFeesSgd,
+  );
+  const maximumProductPrice = Number.isFinite(selectedBudget)
+    ? Math.max(5, Math.min(Number(selectedBudget), policyMaximumProductPrice))
+    : policyMaximumProductPrice;
+  const intent: ShoppingIntent = {
+    query: message,
+    maxBudget: maximumProductPrice,
+    priorities: inferredPriorities(message),
+    requirements: [],
+  };
+  const observedMinutesAgo = Math.max(
+    0,
+    Math.round((Date.now() - Date.parse(batch.observedAt)) / 60_000),
+  );
+  const candidates: ProductOfferBase[] = batch.listings
+    .filter((listing) => listing.price <= maximumProductPrice + 0.01)
+    .map((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      merchant: listing.merchant,
+      price: listing.price,
+      rating: listing.rating,
+      reviewCount: listing.reviewCount,
+      delivery: null,
+      availability: listing.availability,
+      listingUrl: listing.url,
+      artColor:
+        listing.merchant === "Lazada"
+          ? "#dceab7"
+          : listing.merchant === "Shopee"
+            ? "#cddfd9"
+            : "#eddcc5",
+      icon: inferredIcon(`${message} ${listing.title}`),
+      badge: "Best match",
+      reason:
+        "Live marketplace result matching the search terms; open the source listing to confirm current delivery and availability.",
+      requestFitScore: deterministicRequestFit(message, listing.title),
+      source: {
+        name: `${batch.provider} · ${listing.merchant}`,
+        authority: "Live public listing",
+        checkedMinutesAgo: observedMinutesAgo,
+      },
+      seller: {
+        name: listing.sellerName,
+        successfulTransactions: null,
+        paymentAddressChanges: null,
+        monitoringDays: null,
+      },
+    }));
+  const offers = rankOffers(candidates, intent).slice(0, 3).map((offer, index) => ({
+    ...offer,
+    badge:
+      index === 0
+        ? ("Best match" as const)
+        : index === 1
+          ? ("Best value" as const)
+          : ("Best match" as const),
+  }));
+  return {
+    intent,
+    offers,
+    trustPolicy,
+    budgetPolicy,
+    generation: {
+      mode: "live_api",
+      disclaimer: `Live Singapore product metadata fetched through BuyWhere API at ${new Date(batch.observedAt).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })}. Results were ranked locally; open the marketplace listing to confirm price and availability.`,
+    },
+    screenedOut: batch.listings.length - offers.length,
+  };
+}
+
 export async function generateProcurementSimulation(
   message: string,
   selectedBudget?: number,

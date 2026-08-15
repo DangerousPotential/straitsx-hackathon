@@ -67,6 +67,8 @@ function productSearchTerms(query: string) {
       " ",
     )
     .replace(/\bwith\s+(?:fast|same[- ]day|next[- ]day)\s+delivery\b/gi, " ")
+    .replace(/\b(?:including|with)\s+delivery\b/gi, " ")
+    .replace(/\bon\s+(?:shopee|lazada|amazon(?:\s+sg)?)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
   return cleaned || query.trim();
@@ -159,6 +161,7 @@ export function normalizeBuyWhereSearchResult(value: unknown): LiveListing[] {
 export async function fetchBuyWhereListings(
   query: string,
   selectedBudget?: number,
+  domain?: "shopee" | "lazada" | "amazon",
 ): Promise<LiveListingBatch> {
   const apiKey = process.env.BUYWHERE_API_KEY;
   if (!apiKey) throw new Error("BUYWHERE_API_KEY is not configured.");
@@ -177,6 +180,7 @@ export async function fetchBuyWhereListings(
   endpoint.searchParams.set("max_price", maximumProductPrice.toFixed(2));
   endpoint.searchParams.set("compact", "true");
   endpoint.searchParams.set("limit", "12");
+  if (domain) endpoint.searchParams.set("domain", domain);
   const response = await fetch(endpoint, {
     headers: { authorization: `Bearer ${apiKey}` },
     signal: AbortSignal.timeout(15_000),

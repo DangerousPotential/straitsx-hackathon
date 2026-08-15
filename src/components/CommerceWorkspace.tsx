@@ -12,19 +12,13 @@ import type {
   RankingFactors,
   SearchResponse,
 } from "@/types/commerce";
+import { effectiveSearchBudget } from "@/lib/prompt-budget";
 import { WalletButton } from "@/components/WalletButton";
 import { issueSandboxCard, type SandboxCardResult } from "@/lib/x402";
 
 const initial = searchCatalog(
   "wireless earbuds under $30, reviews and fast delivery",
 );
-const purchaseSteps = [
-  "Rechecked source and seller evidence",
-  "Opened merchant",
-  "Matched the exact product",
-  "Added 1 item to cart",
-  "Checked delivery and fees",
-];
 const agentSteps = [
   {
     id: "thinking",
@@ -43,6 +37,38 @@ const agentSteps = [
   },
 ] as const;
 type AgentStage = (typeof agentSteps)[number]["id"] | "ready";
+type LastMileQuote = {
+  version: 1;
+  offerId: string;
+  title: string;
+  productPriceSgd?: number;
+  checkoutTotalSgd?: number;
+  source: "product_page" | "cart_item" | "checkout_total";
+  capturedAt: string;
+};
+const liveQuoteMaxAgeMs = 30 * 60 * 1000;
+
+function liveQuoteAmount(quote?: LastMileQuote | null) {
+  return quote?.checkoutTotalSgd ?? quote?.productPriceSgd;
+}
+
+function isFreshLiveQuote(quote?: LastMileQuote | null) {
+  if (!quote || !Number.isFinite(liveQuoteAmount(quote))) return false;
+  const capturedAt = new Date(quote.capturedAt).getTime();
+  const age = Date.now() - capturedAt;
+  return Number.isFinite(capturedAt) && age >= -60_000 && age <= liveQuoteMaxAgeMs;
+}
+type IssuedCardHandoff = {
+  version: 1;
+  cardOpaqueId: string;
+  cardHtml: string;
+  settlementTx: string;
+  amountSgd: number;
+  issuedAt: string;
+};
+
+const savedSearchKey = "agentlane:last-search";
+const issuedCardSessionKey = "agentlane:issued-sandbox-card";
 
 function Icon({
   name,
@@ -190,10 +216,12 @@ function ProductGlyph({ kind }: { kind: ProductOffer["icon"] }) {
 function ProductListItem({
   offer,
   onBuy,
+  verifiedQuote,
   index,
 }: {
   offer: ProductOffer;
   onBuy: (o: ProductOffer) => void;
+  verifiedQuote?: LastMileQuote;
   index: number;
 }) {
   const changeRate = addressChangesPer90Days(offer);
@@ -205,6 +233,8 @@ function ProductListItem({
     value: "Value",
     delivery: "Delivery",
   };
+  const hasShopeeCompanion = isShopeeListing(offer.listingUrl);
+  const verifiedAmount = liveQuoteAmount(verifiedQuote);
   return (
     <li
       className="lift-in grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-t border-[#e5e9e5] py-5 first:border-t-0 first:pt-0 last:pb-0"
@@ -243,7 +273,12 @@ function ProductListItem({
           </div>
           <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
             <p className="text-xl font-extrabold tabular-nums">
-              S${offer.price.toFixed(2)}
+              S${(verifiedAmount ?? offer.price).toFixed(2)}
+            </p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#718078]">
+              {verifiedAmount === undefined
+                ? "Discovery price"
+                : "Verified live price"}
             </p>
             <p className="mt-1 text-xs font-extrabold tabular-nums text-[#1f5638]">
               {offer.ranking.overallScore}/100 procurement score
@@ -298,7 +333,23 @@ function ProductListItem({
               {offer.availability}
             </li>
           )}
-          {offer.listingUrl && (
+          {hasShopeeCompanion && offer.listingUrl ? (
+            <li>
+              <a
+                href={createLastMileShopeeUrl(offer)}
+                target="_blank"
+                rel="noreferrer"
+                className="focus-ring inline-flex items-center gap-1 rounded font-bold text-[#1f5638] underline decoration-[#93a79a] underline-offset-2"
+              >
+                Open Shopee listing{" "}
+                <Icon name="external" className="h-4 w-4" />
+              </a>
+              <span className="ml-2 text-xs font-semibold text-[#77827b]">
+                Verify the selected variant with the Card Companion before card
+                issuance.
+              </span>
+            </li>
+          ) : offer.listingUrl ? (
             <li>
               <a
                 href={offer.listingUrl}
@@ -309,7 +360,7 @@ function ProductListItem({
                 Open source listing <Icon name="external" className="h-4 w-4" />
               </a>
             </li>
-          )}
+          ) : null}
           <li>
             <span className="font-bold text-[#2d3832]">Source:</span>{" "}
             {offer.source.authority} · {offer.source.name}, checked{" "}
@@ -334,13 +385,38 @@ function ProductListItem({
               ? "Complete seller evidence"
               : "Limited seller evidence"}
           </span>
-          <button
-            onClick={() => onBuy(offer)}
-            className="focus-ring flex h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-sm font-extrabold text-white transition hover:bg-[#123e28]"
-            aria-label={`Pick ${offer.title}`}
-          >
-            Select #{offer.ranking.rank} <Icon name="arrow" className="h-4 w-4" />
-          </button>
+          {hasShopeeCompanion && offer.listingUrl && verifiedAmount === undefined ? (
+            <a
+              href={createLastMileShopeeUrl(offer)}
+              target="_blank"
+              rel="noreferrer"
+              className="focus-ring flex min-h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-center text-sm font-extrabold text-white transition hover:bg-[#123e28]"
+              aria-label={`Open ${offer.title} in Shopee to verify its live price`}
+            >
+              Open &amp; verify price <Icon name="external" className="h-4 w-4" />
+            </a>
+          ) : verifiedAmount !== undefined ? (
+            <button
+              onClick={() => onBuy(offer)}
+              className="focus-ring flex min-h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-sm font-extrabold text-white transition hover:bg-[#123e28]"
+              aria-label={`Continue with the verified price for ${offer.title}`}
+            >
+              Continue with verified price <Icon name="arrow" className="h-4 w-4" />
+            </button>
+          ) : offer.listingUrl ? (
+            <a
+              href={offer.listingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="focus-ring flex min-h-11 items-center gap-2 rounded-full border border-[#b8c5ba] bg-white px-4 text-sm font-extrabold text-[#1f5638] transition hover:border-[#7f9784]"
+            >
+              View listing <Icon name="external" className="h-4 w-4" />
+            </a>
+          ) : (
+            <span className="text-xs font-bold text-[#7a5c24]">
+              Live price verification unavailable
+            </span>
+          )}
         </div>
       </article>
     </li>
@@ -348,10 +424,45 @@ function ProductListItem({
 }
 
 const suggestions = [
-  "Wireless earbuds under $30 with fast delivery",
+  "A slim silent-click USB mouse under S$25",
   "A quiet mouse under $30",
   "A portable speaker with strong reviews",
 ];
+
+function isShopeeListing(value?: string) {
+  if (!value) return false;
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    return hostname === "shopee.sg" || hostname.endsWith(".shopee.sg");
+  } catch {
+    return false;
+  }
+}
+
+function encodeUrlPayload(value: unknown) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
+
+function decodeUrlPayload<T>(value: string) {
+  const normalized = value.replaceAll("-", "+").replaceAll("_", "/");
+  const binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes)) as T;
+}
+
+function createLastMileShopeeUrl(offer: ProductOffer) {
+  if (!offer.listingUrl) return "#";
+  try {
+    const url = new URL(offer.listingUrl);
+    url.hash = `agentlane=${encodeUrlPayload({ version: 3, intent: "verify_price", offerId: offer.id, title: offer.title, listingUrl: offer.listingUrl, discoveryPriceSgd: offer.price })}`;
+    return url.toString();
+  } catch {
+    return offer.listingUrl;
+  }
+}
 
 function BudgetSelector({
   value,
@@ -507,45 +618,48 @@ function ProcurementComposer({
 function PurchasePanel({
   offer,
   transactionLimitSgd,
+  verifiedQuote,
+  onCardIssued,
   onClose,
 }: {
   offer: ProductOffer;
   transactionLimitSgd: number;
+  verifiedQuote: LastMileQuote;
+  onCardIssued: (card: IssuedCardHandoff) => void;
   onClose: () => void;
 }) {
-  const [phase, setPhase] = useState<
-    "checking" | "approval" | "paying" | "complete"
-  >("checking");
-  const [step, setStep] = useState(0);
+  const [phase, setPhase] = useState<"approval" | "paying" | "complete">(
+    "approval",
+  );
   const [card, setCard] = useState<SandboxCardResult | null>(null);
   const [paymentError, setPaymentError] = useState("");
-  const shipping = 1.99,
-    fees = 0.5,
-    total = offer.price + shipping + fees;
-  useEffect(() => {
-    if (phase !== "checking") return;
-    const id = setInterval(
-      () =>
-        setStep((s) => {
-          if (s >= purchaseSteps.length - 1) {
-            clearInterval(id);
-            setTimeout(() => setPhase("approval"), 500);
-            return s;
-          }
-          return s + 1;
-        }),
-      480,
-    );
-    return () => clearInterval(id);
-  }, [phase]);
+  const verifiedProductPrice = verifiedQuote.productPriceSgd;
+  const verifiedCheckoutTotal = verifiedQuote.checkoutTotalSgd;
+  const verifiedAmount = liveQuoteAmount(verifiedQuote)!;
+  const [cardValueMode, setCardValueMode] = useState<"demo" | "full">(() =>
+    verifiedAmount >= 5 ? "full" : "demo",
+  );
+  const fullCheckoutTotal = verifiedAmount,
+    cardValue = cardValueMode === "demo" ? 5 : fullCheckoutTotal,
+    fullValueAvailable = fullCheckoutTotal >= 5;
   async function approve() {
     setPaymentError("");
     setPhase("paying");
     try {
       const issued = await issueSandboxCard(
-        Number(total.toFixed(2)),
+        Number(cardValue.toFixed(2)),
         "Agent Lane",
       );
+      if (issued.result.card_html) {
+        onCardIssued({
+          version: 1,
+          cardOpaqueId: issued.result.card_opaque_id,
+          cardHtml: issued.result.card_html,
+          settlementTx: issued.result.settlement_tx,
+          amountSgd: Number(cardValue.toFixed(2)),
+          issuedAt: new Date().toISOString(),
+        });
+      }
       setCard(issued.result);
       setPhase("complete");
     } catch (error) {
@@ -575,10 +689,8 @@ function PurchasePanel({
             </p>
             <h2 className="mt-1 text-xl font-extrabold">
               {phase === "complete"
-                ? "Purchase complete"
-                : phase === "checking"
-                  ? "Preparing your order"
-                  : "Approve payment"}
+                ? "Sandbox card ready"
+                : "Approve verified amount"}
             </h2>
           </div>
           <button
@@ -590,40 +702,6 @@ function PurchasePanel({
           </button>
         </div>
         <div className="flex-1 p-6">
-          {phase === "checking" && (
-            <div className="lift-in">
-              <div className="rounded-2xl border border-[#dfe4df] bg-white p-5">
-                <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#1f5638]">
-                  Agent working
-                </p>
-                <h3 className="mt-2 text-xl font-extrabold">
-                  Preparing {offer.title}
-                </h3>
-              </div>
-              <ol className="mt-6 space-y-1">
-                {purchaseSteps.map((label, i) => (
-                  <li key={label} className="flex min-h-14 items-center gap-4">
-                    <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-full ${i <= step ? "bg-[#1f5638] text-white" : "border border-[#dfe4df] bg-white text-[#a3aaa5]"}`}
-                    >
-                      {i < step ? (
-                        <Icon name="check" className="h-4 w-4" />
-                      ) : i === step ? (
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-current" />
-                      ) : (
-                        <span className="text-xs font-bold">{i + 1}</span>
-                      )}
-                    </span>
-                    <span
-                      className={`text-sm font-bold ${i <= step ? "text-[#17241d]" : "text-[#89918c]"}`}
-                    >
-                      {label}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
           {(phase === "approval" || phase === "paying") && (
             <div className="lift-in">
               <div className="flex items-center gap-4 rounded-2xl border border-[#dfe4df] bg-white p-4">
@@ -642,44 +720,95 @@ function PurchasePanel({
                   </p>
                   <h3 className="mt-1 font-extrabold">{offer.title}</h3>
                   <p className="mt-1 text-xs text-[#67716b]">
-                    Delivering to Home · Singapore
+                    {verifiedQuote.source === "checkout_total"
+                      ? "Shopee checkout total captured"
+                      : "Shopee product price captured"}
                   </p>
                 </div>
               </div>
               <div className="mt-4 rounded-2xl border border-[#cddfcf] bg-[#f7faf3] p-4">
                 <div className="flex items-center gap-2 font-extrabold text-[#1f5638]">
-                  <Icon name="shield" className="h-5 w-5" /> Seller evidence
-                  reviewed
+                  <Icon name="shield" className="h-5 w-5" /> Live price verified
                 </div>
                 <p className="mt-2 text-xs font-semibold leading-5 text-[#526159]">
-                  {offer.source.authority}, checked{" "}
-                  {offer.source.checkedMinutesAgo === 0
-                    ? "just now"
-                    : `${offer.source.checkedMinutesAgo} min ago`}
-                  .{" "}
-                  {hasCompleteSellerEvidence(offer)
-                    ? `${offer.seller.successfulTransactions!.toLocaleString()} successful transactions and ${offer.seller.paymentAddressChanges} payment-address ${offer.seller.paymentAddressChanges === 1 ? "change" : "changes"} across ${offer.seller.monitoringDays} monitored days.`
-                    : "Successful-transaction and payment-address history were not supplied by this listing source, so they are marked unavailable and penalized in the trust score."}
+                  Card Companion captured this{" "}
+                  {verifiedQuote.source === "checkout_total"
+                    ? "checkout total"
+                    : "product price"}
+                  . This fresh quote is valid for 30 minutes. Card issuance uses
+                  this live value, not the discovery price.
                 </p>
               </div>
               <div className="mt-5 rounded-2xl border border-[#dfe4df] bg-white p-5">
                 <h3 className="font-extrabold">Payment summary</h3>
+                <fieldset className="mt-4">
+                  <legend className="text-sm font-extrabold">
+                    Sandbox card value
+                  </legend>
+                  <div className="mt-2 grid gap-2">
+                    <label
+                      className={`focus-within:ring-2 focus-within:ring-[#1f5638] focus-within:ring-offset-2 flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${cardValueMode === "demo" ? "border-[#1f5638] bg-[#f2f8c8]" : "border-[#dfe4df] bg-white hover:border-[#9dac9d]"}`}
+                    >
+                      <span>
+                        <span className="block text-sm font-extrabold">
+                          5 XSGD demo
+                        </span>
+                        <span className="mt-0.5 block text-xs font-semibold text-[#607067]">
+                          Minimum sandbox issuance
+                        </span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="sandbox-card-value"
+                        value="demo"
+                        checked={cardValueMode === "demo"}
+                        onChange={() => setCardValueMode("demo")}
+                        disabled={phase === "paying"}
+                        className="h-5 w-5 accent-[#1f5638]"
+                      />
+                    </label>
+                    <label
+                      className={`focus-within:ring-2 focus-within:ring-[#1f5638] focus-within:ring-offset-2 flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${!fullValueAvailable || phase === "paying" ? "cursor-not-allowed border-[#e4e7e4] bg-[#f5f6f3] opacity-60" : cardValueMode === "full" ? "cursor-pointer border-[#1f5638] bg-[#f2f8c8]" : "cursor-pointer border-[#dfe4df] bg-white hover:border-[#9dac9d]"}`}
+                    >
+                      <span>
+                        <span className="block text-sm font-extrabold">
+                          {fullCheckoutTotal.toFixed(2)} XSGD verified amount
+                        </span>
+                        <span className="mt-0.5 block text-xs font-semibold text-[#607067]">
+                          {verifiedCheckoutTotal !== undefined
+                            ? "Verified Shopee checkout total"
+                            : "Verified live product price"}
+                        </span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="sandbox-card-value"
+                        value="full"
+                        checked={cardValueMode === "full"}
+                        onChange={() => setCardValueMode("full")}
+                        disabled={!fullValueAvailable || phase === "paying"}
+                        className="h-5 w-5 accent-[#1f5638]"
+                      />
+                    </label>
+                  </div>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-[#6a746e]">
+                    Demo only. The full-value option uses the amount returned by
+                    the extension and cannot spend real money.
+                  </p>
+                </fieldset>
                 <dl className="mt-4 space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <dt className="text-[#67716b]">Product</dt>
-                    <dd>S${offer.price.toFixed(2)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-[#67716b]">Shipping</dt>
-                    <dd>S${shipping.toFixed(2)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-[#67716b]">Service fee</dt>
-                    <dd>S${fees.toFixed(2)}</dd>
-                  </div>
+                  {verifiedProductPrice !== undefined && (
+                    <div className="flex justify-between">
+                      <dt className="text-[#67716b]">Verified product price</dt>
+                      <dd>S${verifiedProductPrice.toFixed(2)}</dd>
+                    </div>
+                  )}
+                  {verifiedCheckoutTotal !== undefined && (
+                    <div className="flex justify-between font-bold text-[#1f5638]"><dt>Verified Shopee checkout total</dt><dd>S${verifiedCheckoutTotal.toFixed(2)}</dd></div>
+                  )}
                   <div className="flex justify-between border-t border-[#dfe4df] pt-4 text-base font-extrabold">
-                    <dt>Sandbox card value</dt>
-                    <dd>{total.toFixed(2)} XSGD</dd>
+                    <dt>Selected card value</dt>
+                    <dd>{cardValue.toFixed(2)} XSGD</dd>
                   </div>
                   <div className="flex justify-between text-xs font-bold text-[#67716b]">
                     <dt>User transaction limit</dt>
@@ -695,7 +824,7 @@ function PurchasePanel({
                   XSGD and issue a non-spendable sandbox Visa.
                 </p>
               </div>
-              {total > transactionLimitSgd && (
+              {cardValue > transactionLimitSgd && (
                 <p role="alert" className="mt-4 text-sm font-bold text-red-700">
                   This exceeds the user&apos;s S$
                   {transactionLimitSgd.toFixed(2)} per-transaction limit.
@@ -711,13 +840,15 @@ function PurchasePanel({
               )}
               <button
                 onClick={approve}
-                disabled={phase === "paying" || total > transactionLimitSgd}
+                disabled={
+                  phase === "paying" || cardValue > transactionLimitSgd
+                }
                 className="focus-ring mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#1f5638] font-extrabold text-white transition hover:bg-[#123e28] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Icon name="wallet" />
                 {phase === "paying"
                   ? "Sign in MetaMask…"
-                  : `Approve S$${total.toFixed(2)} payment`}
+                  : `Approve ${cardValue.toFixed(2)} XSGD test payment`}
               </button>
             </div>
           )}
@@ -730,7 +861,7 @@ function PurchasePanel({
                 Sandbox Visa issued
               </p>
               <h3 className="mt-2 text-2xl font-extrabold">
-                S${total.toFixed(2)} temporary card
+                {cardValue.toFixed(2)} XSGD temporary card
               </h3>
               <p className="mt-2 text-sm text-[#67716b]">
                 Paid with test XSGD · Avalanche Fuji
@@ -766,10 +897,15 @@ function PurchasePanel({
                     rel="noreferrer"
                     className="focus-ring mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#1f5638] text-sm font-extrabold text-white"
                   >
-                    Open secure card{" "}
+                    Open card to capture{" "}
                     <Icon name="external" className="h-4 w-4" />
                   </a>
                 )}
+                <p className="mt-4 rounded-xl bg-[#f5f7f2] px-3 py-2 text-xs font-semibold leading-5 text-[#5d6961]">
+                  Open the AgentLane Card Companion here. It will recover this
+                  issued sandbox card into browser-session memory so you can
+                  reveal it or fill the Shopee card form.
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -820,13 +956,78 @@ export function CommerceWorkspace({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<ProductOffer | null>(null);
+  const [lastMileQuote, setLastMileQuote] = useState<LastMileQuote | null>(null);
+  const [issuedCardHandoff, setIssuedCardHandoff] =
+    useState<IssuedCardHandoff | null>(null);
+  const hasLiveResults =
+    data.generation.mode === "live_api" ||
+    data.generation.mode === "live_api_review";
   const resultLabel = `${data.offers.length} ranked options across ${new Set(data.offers.map((offer) => offer.merchant)).size} stores`;
+  useEffect(() => {
+    let restored: SearchResponse | null = null;
+    try {
+      const saved = window.localStorage.getItem(savedSearchKey);
+      if (saved) restored = JSON.parse(saved) as SearchResponse;
+    } catch {
+      restored = null;
+    }
+
+    const encodedQuote = new URLSearchParams(window.location.hash.slice(1)).get("lastMile");
+    if (!encodedQuote) return;
+    try {
+      const quote = decodeUrlPayload<LastMileQuote>(encodedQuote);
+      if (quote.version !== 1 || !quote.offerId || !isFreshLiveQuote(quote)) return;
+      const base = restored ?? { ...initial, budgetPolicy: initialBudgetPolicy };
+      const updated = {
+        ...base,
+        offers: base.offers.map((offer) => offer.id === quote.offerId && Number.isFinite(quote.productPriceSgd)
+          ? { ...offer, price: quote.productPriceSgd! }
+          : offer),
+      };
+      const matched = updated.offers.find((offer) => offer.id === quote.offerId);
+      const applyHandoff = window.setTimeout(() => {
+        setData(updated);
+        window.localStorage.setItem(savedSearchKey, JSON.stringify(updated));
+        setLastMileQuote(quote);
+        setHasConversation(true);
+        if (matched) setSelected(matched);
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      }, 0);
+      return () => window.clearTimeout(applyHandoff);
+    } catch {
+      // Ignore malformed handoffs and keep the current procurement state.
+    }
+  }, [initialBudgetPolicy]);
+  useEffect(() => {
+    let savedCard: IssuedCardHandoff | null = null;
+    try {
+      const saved = window.sessionStorage.getItem(issuedCardSessionKey);
+      if (saved) savedCard = JSON.parse(saved) as IssuedCardHandoff;
+    } catch {
+      // Session storage can be unavailable in privacy-restricted browsers.
+    }
+    if (!savedCard) return;
+    const restoreCard = window.setTimeout(
+      () => setIssuedCardHandoff(savedCard),
+      0,
+    );
+    return () => window.clearTimeout(restoreCard);
+  }, []);
+  function rememberIssuedCard(card: IssuedCardHandoff) {
+    try {
+      window.sessionStorage.setItem(issuedCardSessionKey, JSON.stringify(card));
+    } catch {
+      // The extension can still capture the in-page handoff before this tab closes.
+    }
+    setIssuedCardHandoff(card);
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     const message = query.trim();
     if (!message || loading) return;
     setSubmittedQuery(message);
-    setSubmittedBudget(shoppingBudget);
+    const requestedBudget = effectiveSearchBudget(message, shoppingBudget);
+    setSubmittedBudget(requestedBudget);
     setHasConversation(true);
     setLoading(true);
     setError("");
@@ -838,13 +1039,18 @@ export function CommerceWorkspace({
         fetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, maxBudget: shoppingBudget }),
+          body: JSON.stringify({ message, maxBudget: requestedBudget }),
         }),
         new Promise((resolve) => window.setTimeout(resolve, 1450)),
       ]);
       const json = await response.json();
       if (!response.ok) throw new Error(json.error);
       setData(json);
+      if (Number.isFinite(json.intent?.maxBudget))
+        setSubmittedBudget(Number(json.intent.maxBudget));
+      window.localStorage.setItem(savedSearchKey, JSON.stringify(json));
+      setLastMileQuote(null);
+      setSelected(null);
       setStage("ready");
     } catch (e) {
       setError(
@@ -860,6 +1066,13 @@ export function CommerceWorkspace({
   const activeStep = agentSteps.findIndex((step) => step.id === stage);
   return (
     <main className="flex min-h-dvh flex-col bg-[#f8f9f5]">
+      {issuedCardHandoff && (
+        <span
+          id="agentlane-issued-card-handoff"
+          data-agentlane-issued-card={encodeUrlPayload(issuedCardHandoff)}
+          hidden
+        />
+      )}
       <header className="sticky top-0 z-40 border-b border-[#e1e5e1] bg-[#f8f9f5]/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-4 sm:px-6">
           <a
@@ -889,8 +1102,9 @@ export function CommerceWorkspace({
             What should I procure?
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-center text-base leading-7 text-[#68736c]">
-            Describe what you need. I&apos;ll find suitable products, assess
-            the data and sellers, and handle checkout after you choose.
+            Describe what you need. I&apos;ll find suitable products and assess
+            the available evidence. Open a listing to verify its live price
+            before any card is issued.
           </p>
           <div className="mt-6">
             <BudgetSelector
@@ -1027,11 +1241,20 @@ export function CommerceWorkspace({
                       <div className="mt-5 rounded-2xl border border-[#dce3dd] bg-white p-4 shadow-[0_8px_28px_rgba(23,36,29,.04)] sm:p-5">
                         <div className="flex flex-col gap-2 border-b border-[#e5e9e5] pb-4 sm:flex-row sm:items-end sm:justify-between">
                           <div>
-                            <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-[#1f5638]">
-                              Ranked products
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-[#1f5638]">
+                                Ranked products
+                              </p>
+                              <span
+                                className={`rounded-full px-2 py-1 text-[10px] font-extrabold uppercase tracking-[.08em] ${hasLiveResults ? "bg-[#e7f2d2] text-[#245338]" : "bg-[#f4ead5] text-[#79551e]"}`}
+                              >
+                                {hasLiveResults
+                                  ? "Live marketplace results"
+                                  : "Demo results"}
+                              </span>
+                            </div>
                             <h2 className="mt-1 text-xl font-extrabold tracking-[-.03em]">
-                              Compare, select, then I&apos;ll check out
+                              Compare, open, then verify the live price
                             </h2>
                           </div>
                           <div className="text-xs font-semibold leading-5 text-[#6b766f] sm:text-right">
@@ -1073,14 +1296,21 @@ export function CommerceWorkspace({
                                 offer={offer}
                                 index={index}
                                 onBuy={setSelected}
+                                verifiedQuote={
+                                  lastMileQuote?.offerId === offer.id &&
+                                  isFreshLiveQuote(lastMileQuote)
+                                    ? lastMileQuote
+                                    : undefined
+                                }
                               />
                             ))}
                           </ol>
                         ) : (
                           <div className="py-10 text-center">
                             <p className="font-extrabold">
-                              No simulated offers fit the budget and transaction
-                              limit.
+                              {hasLiveResults
+                                ? "No live products fit the budget and transaction limit."
+                                : "No demo offers fit the budget and transaction limit."}
                             </p>
                             <p className="mt-2 text-sm text-[#67716b]">
                               Try a lower-cost product or ask an administrator
@@ -1122,17 +1352,21 @@ export function CommerceWorkspace({
                 onSubmit={submit}
               />
               <p className="mt-2 text-center text-[11px] font-medium text-[#89918c]">
-                Choose a recommendation and the agent will prepare checkout for
-                your approval.
+                Open a recommendation, verify its live price, then return to
+                approve sandbox-card issuance.
               </p>
             </div>
           </div>
         </div>
       )}
-      {selected && (
+      {selected &&
+        lastMileQuote?.offerId === selected.id &&
+        isFreshLiveQuote(lastMileQuote) && (
         <PurchasePanel
           offer={selected}
           transactionLimitSgd={data.budgetPolicy.effectiveTransactionLimitSgd}
+          verifiedQuote={lastMileQuote}
+          onCardIssued={rememberIssuedCard}
           onClose={() => setSelected(null)}
         />
       )}{" "}
