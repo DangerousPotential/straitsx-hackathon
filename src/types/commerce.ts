@@ -30,7 +30,7 @@ export type OfferRanking = {
 export type ProductOfferBase = {
   id:string;
   title:string;
-  merchant:"Lazada"|"Shopee"|"Amazon SG";
+  merchant:string;
   price:number;
   rating:number|null;
   reviewCount:number|null;
@@ -49,5 +49,5 @@ export type ProductOffer = ProductOfferBase & { ranking:OfferRanking };
 export type ShoppingIntent = { query:string; maxBudget:number; priorities:string[]; requirements:string[] };
 export type TrustPolicy = { maxDataAgeMinutes:number; minimumSuccessfulTransactions:number; maximumAddressChangesPer90Days:number };
 export type BudgetPolicy = { userTransactionLimitSgd:number; providerTransactionLimitSgd:number; effectiveTransactionLimitSgd:number; estimatedFeesSgd:number };
-export type ResultGeneration = { mode:"live_mcp_review"|"openai_simulation"|"catalog_fallback"; disclaimer:string };
+export type ResultGeneration = { mode:"live_api_review"|"openai_simulation"|"catalog_fallback"; disclaimer:string };
 export type SearchResponse = { intent:ShoppingIntent; offers:ProductOffer[]; trustPolicy:TrustPolicy; budgetPolicy:BudgetPolicy; generation:ResultGeneration; screenedOut:number };

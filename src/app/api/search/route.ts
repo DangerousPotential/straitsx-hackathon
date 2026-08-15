@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchCatalog } from "@/lib/catalog";
-import { fetchAmazonSgListings } from "@/lib/brightdata-listings";
+import { fetchBuyWhereListings } from "@/lib/buywhere-listings";
 import {
   generateProcurementSimulation,
   reviewLiveProcurementListings,
@@ -9,7 +9,7 @@ import {
 function safeErrorMessage(error: unknown) {
   let message = error instanceof Error ? error.message : "Unknown error";
   for (const secret of [
-    process.env.BRIGHTDATA_API_TOKEN,
+    process.env.BUYWHERE_API_KEY,
     process.env.OPENAI_API_KEY,
   ])
     if (secret) message = message.replaceAll(secret, "[redacted]");
@@ -27,16 +27,16 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   const message = body.message.trim().slice(0, 1200);
-  if (process.env.OPENAI_API_KEY && process.env.BRIGHTDATA_API_TOKEN) {
+  if (process.env.OPENAI_API_KEY && process.env.BUYWHERE_API_KEY) {
     try {
-      const listings = await fetchAmazonSgListings(message);
+      const listings = await fetchBuyWhereListings(message, body.maxBudget);
       return NextResponse.json(
         await reviewLiveProcurementListings(message, body.maxBudget, listings),
         { headers: { "cache-control": "no-store" } },
       );
     } catch (error) {
       console.error(
-        "Live Bright Data procurement failed; using OpenAI simulation fallback.",
+        "Live BuyWhere procurement failed; using OpenAI simulation fallback.",
         safeErrorMessage(error),
       );
     }

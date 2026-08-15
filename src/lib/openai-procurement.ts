@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getBudgetPolicy } from "@/lib/budget";
-import type { LiveListingBatch } from "@/lib/brightdata-listings";
+import type { LiveListingBatch } from "@/lib/buywhere-listings";
 import { passesTrustScreen, rankOffers, trustPolicy } from "@/lib/catalog";
 import type {
   ProductOfferBase,
@@ -255,16 +255,16 @@ export async function generateProcurementSimulation(
   ) as unknown;
   if (!isSimulationPayload(parsed))
     throw new Error("OpenAI returned an invalid procurement result.");
-  const palette: Record<ProductOfferBase["merchant"], string> = {
-    Lazada: "#dceab7",
-    Shopee: "#cddfd9",
-    "Amazon SG": "#eddcc5",
-  };
   const screenedOffers = parsed.offers
     .map((offer, index) => ({
       ...offer,
       id: offerId(offer.title, index),
-      artColor: palette[offer.merchant],
+      artColor:
+        offer.merchant === "Lazada"
+          ? "#dceab7"
+          : offer.merchant === "Shopee"
+            ? "#cddfd9"
+            : "#eddcc5",
     }))
     .filter(
       (offer) =>
@@ -356,20 +356,25 @@ export async function reviewLiveProcurementListings(
       const offer: ProductOfferBase = {
         id: listing.id,
         title: listing.title,
-        merchant: "Amazon SG",
+        merchant: listing.merchant,
         price: listing.price,
         rating: listing.rating,
         reviewCount: listing.reviewCount,
         delivery: null,
         availability: listing.availability,
         listingUrl: listing.url,
-        artColor: "#eddcc5",
+        artColor:
+          listing.merchant === "Lazada"
+            ? "#dceab7"
+            : listing.merchant === "Shopee"
+              ? "#cddfd9"
+              : "#eddcc5",
         icon: review.icon,
         badge: review.badge,
         reason: review.reason,
         requestFitScore: review.requestFitScore,
         source: {
-          name: `${batch.provider} · Amazon SG`,
+          name: `${batch.provider} · ${listing.merchant}`,
           authority: "Live public listing",
           checkedMinutesAgo: Math.max(
             0,
@@ -395,8 +400,8 @@ export async function reviewLiveProcurementListings(
     trustPolicy,
     budgetPolicy,
     generation: {
-      mode: "live_mcp_review",
-      disclaimer: `Live Amazon SG listing metadata fetched through Bright Data MCP at ${new Date(batch.observedAt).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })}. GPT-5.6 Luna scored request fit; missing seller transaction and payment-address evidence was not inferred.`,
+      mode: "live_api_review",
+      disclaimer: `Live Singapore product metadata fetched through BuyWhere API at ${new Date(batch.observedAt).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })}. GPT-5.6 Luna scored request fit; missing seller transaction and payment-address evidence was not inferred.`,
     },
     screenedOut: batch.listings.length - offers.length,
   };
