@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgentLane
 
-## Getting Started
+A procurement-agent demo built with Next.js, OpenAI structured outputs, and sandbox XSGD card issuance on Avalanche Fuji.
 
-First, run the development server:
+## Configuration
+
+Copy `.env.example` to `.env.local`, then add a newly generated OpenAI project key:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```dotenv
+OPENAI_API_KEY=your_new_key
+OPENAI_MODEL=gpt-5.6-luna
+USER_TRANSACTION_LIMIT_SGD=30
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`OPENAI_API_KEY` is read only by the server-side search route. Never expose it through a `NEXT_PUBLIC_` variable or commit `.env.local`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`USER_TRANSACTION_LIMIT_SGD` controls the maximum card value this user may issue per transaction. The effective limit cannot exceed the StraitsX sandbox provider limit of S$30. The policy is enforced when recommendations are generated, when an x402 quote is requested, and again immediately before card issuance.
 
-## Learn More
+Without an OpenAI key, the app remains usable with its local simulated catalogue fallback.
 
-To learn more about Next.js, take a look at the following resources:
+## Run locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Verification
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+```
