@@ -15,6 +15,12 @@
 /.playwright-cli/
 /output/playwright/
 
+# tool caches
+/.cache/
+/.turbo/
+.eslintcache
+.stylelintcache
+
 # next.js
 /.next/
 /out/
@@ -24,13 +30,29 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.key
+*.p12
+*.pfx
+*.swp
+*.swo
+*~
+
+# editors
+/.idea/
+/.vscode/
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# local scratch files
+/.tmp/
+/tmp/
 
 # env files (can opt-in for committing if needed)
 .env*

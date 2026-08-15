@@ -53,7 +53,8 @@ function liveQuoteAmount(quote?: LastMileQuote | null) {
 }
 
 function isFreshLiveQuote(quote?: LastMileQuote | null) {
-  if (!quote || !Number.isFinite(liveQuoteAmount(quote))) return false;
+  const amount = liveQuoteAmount(quote);
+  if (!quote || !Number.isFinite(amount) || amount! <= 0) return false;
   const capturedAt = new Date(quote.capturedAt).getTime();
   const age = Date.now() - capturedAt;
   return Number.isFinite(capturedAt) && age >= -60_000 && age <= liveQuoteMaxAgeMs;
@@ -234,7 +235,7 @@ function ProductListItem({
     delivery: "Delivery",
   };
   const hasShopeeCompanion = isShopeeListing(offer.listingUrl);
-  const verifiedAmount = liveQuoteAmount(verifiedQuote);
+  const verifiedProductPrice = verifiedQuote?.productPriceSgd;
   return (
     <li
       className="lift-in grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-t border-[#e5e9e5] py-5 first:border-t-0 first:pt-0 last:pb-0"
@@ -273,12 +274,12 @@ function ProductListItem({
           </div>
           <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
             <p className="text-xl font-extrabold tabular-nums">
-              S${(verifiedAmount ?? offer.price).toFixed(2)}
+              S${(verifiedProductPrice ?? offer.price).toFixed(2)}
             </p>
             <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#718078]">
-              {verifiedAmount === undefined
+              {verifiedProductPrice === undefined
                 ? "Discovery price"
-                : "Verified live price"}
+                : "Verified product price"}
             </p>
             <p className="mt-1 text-xs font-extrabold tabular-nums text-[#1f5638]">
               {offer.ranking.overallScore}/100 procurement score
@@ -345,8 +346,8 @@ function ProductListItem({
                 <Icon name="external" className="h-4 w-4" />
               </a>
               <span className="ml-2 text-xs font-semibold text-[#77827b]">
-                Verify the selected variant with the Card Companion before card
-                issuance.
+                Choose the variant on Shopee. Card Companion will create the
+                card from the final checkout total.
               </span>
             </li>
           ) : offer.listingUrl ? (
@@ -385,17 +386,17 @@ function ProductListItem({
               ? "Complete seller evidence"
               : "Limited seller evidence"}
           </span>
-          {hasShopeeCompanion && offer.listingUrl && verifiedAmount === undefined ? (
+          {hasShopeeCompanion && offer.listingUrl ? (
             <a
               href={createLastMileShopeeUrl(offer)}
               target="_blank"
               rel="noreferrer"
               className="focus-ring flex min-h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-center text-sm font-extrabold text-white transition hover:bg-[#123e28]"
-              aria-label={`Open ${offer.title} in Shopee to verify its live price`}
+              aria-label={`Open ${offer.title} on Shopee to continue the purchase`}
             >
-              Open &amp; verify price <Icon name="external" className="h-4 w-4" />
+              Shop on Shopee <Icon name="external" className="h-4 w-4" />
             </a>
-          ) : verifiedAmount !== undefined ? (
+          ) : verifiedProductPrice !== undefined ? (
             <button
               onClick={() => onBuy(offer)}
               className="focus-ring flex min-h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-sm font-extrabold text-white transition hover:bg-[#123e28]"
@@ -633,16 +634,9 @@ function PurchasePanel({
   );
   const [card, setCard] = useState<SandboxCardResult | null>(null);
   const [paymentError, setPaymentError] = useState("");
-  const verifiedProductPrice = verifiedQuote.productPriceSgd;
-  const verifiedCheckoutTotal = verifiedQuote.checkoutTotalSgd;
-  const verifiedAmount = liveQuoteAmount(verifiedQuote)!;
-  const [cardValueMode, setCardValueMode] = useState<"demo" | "full">(() =>
-    verifiedAmount >= 5 ? "full" : "demo",
-  );
-  const fullCheckoutTotal = verifiedAmount,
-    cardValue = cardValueMode === "demo" ? 5 : fullCheckoutTotal,
-    fullValueAvailable = fullCheckoutTotal >= 5;
-  async function approve() {
+  const verifiedCheckoutTotal = verifiedQuote.checkoutTotalSgd!;
+  const cardValue = Math.max(5, verifiedCheckoutTotal);
+  async function purchase() {
     setPaymentError("");
     setPhase("paying");
     try {
@@ -685,12 +679,12 @@ function PurchasePanel({
         <div className="flex items-center justify-between border-b border-[#dfe4df] px-6 py-5">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#67716b]">
-              Agent checkout
+              Verified merchant checkout
             </p>
             <h2 className="mt-1 text-xl font-extrabold">
               {phase === "complete"
-                ? "Sandbox card ready"
-                : "Approve verified amount"}
+                ? "Purchase card ready"
+                : "Review your purchase"}
             </h2>
           </div>
           <button
@@ -720,9 +714,7 @@ function PurchasePanel({
                   </p>
                   <h3 className="mt-1 font-extrabold">{offer.title}</h3>
                   <p className="mt-1 text-xs text-[#67716b]">
-                    {verifiedQuote.source === "checkout_total"
-                      ? "Shopee checkout total captured"
-                      : "Shopee product price captured"}
+                    Shopee checkout total captured
                   </p>
                 </div>
               </div>
@@ -731,83 +723,17 @@ function PurchasePanel({
                   <Icon name="shield" className="h-5 w-5" /> Live price verified
                 </div>
                 <p className="mt-2 text-xs font-semibold leading-5 text-[#526159]">
-                  Card Companion captured this{" "}
-                  {verifiedQuote.source === "checkout_total"
-                    ? "checkout total"
-                    : "product price"}
-                  . This fresh quote is valid for 30 minutes. Card issuance uses
-                  this live value, not the discovery price.
+                  Card Companion captured the final checkout total after you
+                  selected the product on Shopee. The purchase card uses this
+                  value, not the earlier discovery price.
                 </p>
               </div>
               <div className="mt-5 rounded-2xl border border-[#dfe4df] bg-white p-5">
-                <h3 className="font-extrabold">Payment summary</h3>
-                <fieldset className="mt-4">
-                  <legend className="text-sm font-extrabold">
-                    Sandbox card value
-                  </legend>
-                  <div className="mt-2 grid gap-2">
-                    <label
-                      className={`focus-within:ring-2 focus-within:ring-[#1f5638] focus-within:ring-offset-2 flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${cardValueMode === "demo" ? "border-[#1f5638] bg-[#f2f8c8]" : "border-[#dfe4df] bg-white hover:border-[#9dac9d]"}`}
-                    >
-                      <span>
-                        <span className="block text-sm font-extrabold">
-                          5 XSGD demo
-                        </span>
-                        <span className="mt-0.5 block text-xs font-semibold text-[#607067]">
-                          Minimum sandbox issuance
-                        </span>
-                      </span>
-                      <input
-                        type="radio"
-                        name="sandbox-card-value"
-                        value="demo"
-                        checked={cardValueMode === "demo"}
-                        onChange={() => setCardValueMode("demo")}
-                        disabled={phase === "paying"}
-                        className="h-5 w-5 accent-[#1f5638]"
-                      />
-                    </label>
-                    <label
-                      className={`focus-within:ring-2 focus-within:ring-[#1f5638] focus-within:ring-offset-2 flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${!fullValueAvailable || phase === "paying" ? "cursor-not-allowed border-[#e4e7e4] bg-[#f5f6f3] opacity-60" : cardValueMode === "full" ? "cursor-pointer border-[#1f5638] bg-[#f2f8c8]" : "cursor-pointer border-[#dfe4df] bg-white hover:border-[#9dac9d]"}`}
-                    >
-                      <span>
-                        <span className="block text-sm font-extrabold">
-                          {fullCheckoutTotal.toFixed(2)} XSGD verified amount
-                        </span>
-                        <span className="mt-0.5 block text-xs font-semibold text-[#607067]">
-                          {verifiedCheckoutTotal !== undefined
-                            ? "Verified Shopee checkout total"
-                            : "Verified live product price"}
-                        </span>
-                      </span>
-                      <input
-                        type="radio"
-                        name="sandbox-card-value"
-                        value="full"
-                        checked={cardValueMode === "full"}
-                        onChange={() => setCardValueMode("full")}
-                        disabled={!fullValueAvailable || phase === "paying"}
-                        className="h-5 w-5 accent-[#1f5638]"
-                      />
-                    </label>
-                  </div>
-                  <p className="mt-3 text-xs font-semibold leading-5 text-[#6a746e]">
-                    Demo only. The full-value option uses the amount returned by
-                    the extension and cannot spend real money.
-                  </p>
-                </fieldset>
+                <h3 className="font-extrabold">Purchase summary</h3>
                 <dl className="mt-4 space-y-3 text-sm">
-                  {verifiedProductPrice !== undefined && (
-                    <div className="flex justify-between">
-                      <dt className="text-[#67716b]">Verified product price</dt>
-                      <dd>S${verifiedProductPrice.toFixed(2)}</dd>
-                    </div>
-                  )}
-                  {verifiedCheckoutTotal !== undefined && (
-                    <div className="flex justify-between font-bold text-[#1f5638]"><dt>Verified Shopee checkout total</dt><dd>S${verifiedCheckoutTotal.toFixed(2)}</dd></div>
-                  )}
+                  <div className="flex justify-between font-bold text-[#1f5638]"><dt>Verified Shopee checkout total</dt><dd>S${verifiedCheckoutTotal.toFixed(2)}</dd></div>
                   <div className="flex justify-between border-t border-[#dfe4df] pt-4 text-base font-extrabold">
-                    <dt>Selected card value</dt>
+                    <dt>Purchase card value</dt>
                     <dd>{cardValue.toFixed(2)} XSGD</dd>
                   </div>
                   <div className="flex justify-between text-xs font-bold text-[#67716b]">
@@ -815,13 +741,19 @@ function PurchasePanel({
                     <dd>≤ S${transactionLimitSgd.toFixed(2)}</dd>
                   </div>
                 </dl>
+                {verifiedCheckoutTotal < 5 && (
+                  <p className="mt-3 text-xs font-semibold leading-5 text-[#6a746e]">
+                    The Fuji sandbox issuer has a 5 XSGD minimum, so this test
+                    card is slightly higher than the checkout total.
+                  </p>
+                )}
               </div>
               <div className="mt-5 flex gap-3 rounded-2xl bg-[#f2f8c8] p-4 text-[#123e28]">
                 <Icon name="shield" className="h-5 w-5 shrink-0" />
                 <p className="text-xs font-semibold leading-5">
-                  MetaMask will switch to Avalanche Fuji and sign a gasless
-                  EIP-3009 authorization. The XSGD MCP server will settle test
-                  XSGD and issue a non-spendable sandbox Visa.
+                  Purchase now creates a non-spendable sandbox Visa for this
+                  checkout. MetaMask will ask you to sign the test authorization;
+                  it will not place the Shopee order.
                 </p>
               </div>
               {cardValue > transactionLimitSgd && (
@@ -839,7 +771,7 @@ function PurchasePanel({
                 </p>
               )}
               <button
-                onClick={approve}
+                onClick={purchase}
                 disabled={
                   phase === "paying" || cardValue > transactionLimitSgd
                 }
@@ -847,8 +779,8 @@ function PurchasePanel({
               >
                 <Icon name="wallet" />
                 {phase === "paying"
-                  ? "Sign in MetaMask…"
-                  : `Approve ${cardValue.toFixed(2)} XSGD test payment`}
+                  ? "Creating purchase card…"
+                  : `Purchase now · S$${verifiedCheckoutTotal.toFixed(2)}`}
               </button>
             </div>
           )}
@@ -858,13 +790,13 @@ function PurchasePanel({
                 <Icon name="check" className="h-9 w-9" />
               </div>
               <p className="mt-6 text-xs font-extrabold uppercase tracking-[.16em] text-[#1f5638]">
-                Sandbox Visa issued
+                Purchase card created
               </p>
               <h3 className="mt-2 text-2xl font-extrabold">
-                {cardValue.toFixed(2)} XSGD temporary card
+                {cardValue.toFixed(2)} XSGD checkout card
               </h3>
               <p className="mt-2 text-sm text-[#67716b]">
-                Paid with test XSGD · Avalanche Fuji
+                Ready to use on the verified Shopee checkout
               </p>
               <div className="mt-8 rounded-2xl border border-[#dfe4df] bg-white p-5 text-left">
                 <div className="border-b border-[#edf0ed] pb-4">
@@ -990,7 +922,7 @@ export function CommerceWorkspace({
         window.localStorage.setItem(savedSearchKey, JSON.stringify(updated));
         setLastMileQuote(quote);
         setHasConversation(true);
-        if (matched) setSelected(matched);
+        if (matched && quote.source === "checkout_total") setSelected(matched);
         window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
       }, 0);
       return () => window.clearTimeout(applyHandoff);
@@ -1254,7 +1186,7 @@ export function CommerceWorkspace({
                               </span>
                             </div>
                             <h2 className="mt-1 text-xl font-extrabold tracking-[-.03em]">
-                              Compare, open, then verify the live price
+                              Compare, then continue on the merchant site
                             </h2>
                           </div>
                           <div className="text-xs font-semibold leading-5 text-[#6b766f] sm:text-right">
@@ -1352,8 +1284,8 @@ export function CommerceWorkspace({
                 onSubmit={submit}
               />
               <p className="mt-2 text-center text-[11px] font-medium text-[#89918c]">
-                Open a recommendation, verify its live price, then return to
-                approve sandbox-card issuance.
+                Open a recommendation, choose the product on Shopee, then create
+                the card from the verified checkout total.
               </p>
             </div>
           </div>
@@ -1361,6 +1293,8 @@ export function CommerceWorkspace({
       )}
       {selected &&
         lastMileQuote?.offerId === selected.id &&
+        lastMileQuote.source === "checkout_total" &&
+        Number.isFinite(lastMileQuote.checkoutTotalSgd) &&
         isFreshLiveQuote(lastMileQuote) && (
         <PurchasePanel
           offer={selected}

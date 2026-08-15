@@ -1,22 +1,26 @@
 const elements = {
-  unsupported: document.querySelector("#unsupported"), agentlane: document.querySelector("#agentlane"), issuedCard: document.querySelector("#issued-card"), capture: document.querySelector("#capture"), noCard: document.querySelector("#no-card"), livePrice: document.querySelector("#live-price"), cardReady: document.querySelector("#card-ready"), complete: document.querySelector("#complete"), captureCard: document.querySelector("#capture-card"), captureError: document.querySelector("#capture-error"), showRecovery: document.querySelector("#show-recovery"), recoveryForm: document.querySelector("#recovery-form"), recoveryCardId: document.querySelector("#recovery-card-id"), recoverySettlement: document.querySelector("#recovery-settlement"), recoveryWallet: document.querySelector("#recovery-wallet"), recoveryAmount: document.querySelector("#recovery-amount"), recoverCard: document.querySelector("#recover-card"), recoveryError: document.querySelector("#recovery-error"), refreshPrice: document.querySelector("#refresh-price"), prepareCheckout: document.querySelector("#prepare-checkout"), automationProgress: document.querySelector("#automation-progress"), automationState: document.querySelector("#automation-state"), automationMessage: document.querySelector("#automation-message"), automationStepTotal: document.querySelector("#automation-step-total"), automationStepPayment: document.querySelector("#automation-step-payment"), automationStepCard: document.querySelector("#automation-step-card"), quoteHeading: document.querySelector("#quote-heading"), quoteCopy: document.querySelector("#quote-copy"), quoteResult: document.querySelector("#quote-result"), quoteLabel: document.querySelector("#quote-label"), quotePrice: document.querySelector("#quote-price"), quoteError: document.querySelector("#quote-error"), useAgentLane: document.querySelector("#use-agentlane"), checkoutCaptured: document.querySelector("#checkout-captured"), checkoutDetail: document.querySelector("#checkout-detail"), checkoutCardState: document.querySelector("#checkout-card-state"), checkoutCardHeading: document.querySelector("#checkout-card-heading"), checkoutCardCopy: document.querySelector("#checkout-card-copy"), checkoutBinding: document.querySelector("#checkout-binding"), boundCheckoutTotal: document.querySelector("#bound-checkout-total"), boundCheckoutAge: document.querySelector("#bound-checkout-age"), checkoutGuide: document.querySelector("#checkout-guide"), fillCard: document.querySelector("#fill-card"), fillNote: document.querySelector("#fill-note"), fillError: document.querySelector("#fill-error"), fillAgain: document.querySelector("#fill-again"), forgetCard: document.querySelector("#forget-card"), forgetCardComplete: document.querySelector("#forget-card-complete"), issuedCardValue: document.querySelector("#issued-card-value"), issuedCardSettlement: document.querySelector("#issued-card-settlement"), openIssuedCard: document.querySelector("#open-issued-card"), forgetIssuedCard: document.querySelector("#forget-issued-card"), revealCard: document.querySelector("#reveal-card"), sensitiveCardDetails: document.querySelector("#sensitive-card-details"), cardFullNumber: document.querySelector("#card-full-number"), cardCvv: document.querySelector("#card-cvv"),
+  unsupported: document.querySelector("#unsupported"), agentlane: document.querySelector("#agentlane"), issuedCard: document.querySelector("#issued-card"), capture: document.querySelector("#capture"), noCard: document.querySelector("#no-card"), livePrice: document.querySelector("#live-price"), cardReady: document.querySelector("#card-ready"), complete: document.querySelector("#complete"), paymentComplete: document.querySelector("#payment-complete"), captureCard: document.querySelector("#capture-card"), captureError: document.querySelector("#capture-error"), showRecovery: document.querySelector("#show-recovery"), recoveryForm: document.querySelector("#recovery-form"), recoveryCardId: document.querySelector("#recovery-card-id"), recoverySettlement: document.querySelector("#recovery-settlement"), recoveryWallet: document.querySelector("#recovery-wallet"), recoveryAmount: document.querySelector("#recovery-amount"), recoverCard: document.querySelector("#recover-card"), recoveryError: document.querySelector("#recovery-error"), refreshPrice: document.querySelector("#refresh-price"), prepareCheckout: document.querySelector("#prepare-checkout"), automationProgress: document.querySelector("#automation-progress"), automationState: document.querySelector("#automation-state"), automationMessage: document.querySelector("#automation-message"), automationStepTotal: document.querySelector("#automation-step-total"), automationStepPayment: document.querySelector("#automation-step-payment"), automationStepCard: document.querySelector("#automation-step-card"), quoteHeading: document.querySelector("#quote-heading"), quoteCopy: document.querySelector("#quote-copy"), quoteResult: document.querySelector("#quote-result"), quoteLabel: document.querySelector("#quote-label"), quotePrice: document.querySelector("#quote-price"), quoteError: document.querySelector("#quote-error"), useAgentLane: document.querySelector("#use-agentlane"), checkoutCaptured: document.querySelector("#checkout-captured"), checkoutDetail: document.querySelector("#checkout-detail"), checkoutCardState: document.querySelector("#checkout-card-state"), checkoutCardHeading: document.querySelector("#checkout-card-heading"), checkoutCardCopy: document.querySelector("#checkout-card-copy"), paymentCardPicker: document.querySelector("#payment-card-picker"), paymentCardOptions: document.querySelector("#payment-card-options"), reviewPayment: document.querySelector("#review-payment"), paymentConfirmation: document.querySelector("#payment-confirmation"), paymentConfirmCard: document.querySelector("#payment-confirm-card"), paymentConfirmTotal: document.querySelector("#payment-confirm-total"), cancelPayment: document.querySelector("#cancel-payment"), confirmPayment: document.querySelector("#confirm-payment"), paymentError: document.querySelector("#payment-error"), addCardPicker: document.querySelector("#add-card-picker"), addCardOptions: document.querySelector("#add-card-options"), checkoutBinding: document.querySelector("#checkout-binding"), boundCheckoutTotal: document.querySelector("#bound-checkout-total"), boundCheckoutAge: document.querySelector("#bound-checkout-age"), checkoutGuide: document.querySelector("#checkout-guide"), fillCard: document.querySelector("#fill-card"), fillNote: document.querySelector("#fill-note"), fillError: document.querySelector("#fill-error"), fillAgain: document.querySelector("#fill-again"), forgetCard: document.querySelector("#forget-card"), forgetCardComplete: document.querySelector("#forget-card-complete"), issuedCardValue: document.querySelector("#issued-card-value"), issuedCardSettlement: document.querySelector("#issued-card-settlement"), openIssuedCard: document.querySelector("#open-issued-card"), forgetIssuedCard: document.querySelector("#forget-issued-card"), revealCard: document.querySelector("#reveal-card"), sensitiveCardDetails: document.querySelector("#sensitive-card-details"), cardFullNumber: document.querySelector("#card-full-number"), cardCvv: document.querySelector("#card-cvv"),
 };
 const cardStorageKey = "agentlaneSandboxCard";
 const persistentCardStorageKey = "agentlanePersistentSandboxCard";
+const cardVaultStorageKey = "agentlaneSandboxCardVault";
 const issuedCardStorageKey = "agentlaneIssuedSandboxCard";
 const cardEventStorageKey = "agentlaneCardSessionEvents";
 const contextStorageKey = "agentlaneProcurementContext";
 const checkoutStorageKey = "agentlaneShopeeCheckout";
+const pendingCheckoutStorageKey = "agentlanePendingShopeeCheckout";
 const checkoutMaxAgeMs = 30 * 60 * 1000;
 let activeTab;
 let activeUrl;
 let sandboxCard;
+let sandboxCards = [];
 let issuedCardReference;
 let procurementContext;
 let checkoutSnapshot;
+let selectedPaymentOption = null;
 
 function showSection(section) {
-  [elements.unsupported, elements.agentlane, elements.issuedCard, elements.capture, elements.noCard, elements.livePrice, elements.cardReady, elements.complete].forEach((element) => { element.hidden = element !== section; });
+  [elements.unsupported, elements.agentlane, elements.issuedCard, elements.capture, elements.noCard, elements.livePrice, elements.cardReady, elements.complete, elements.paymentComplete].forEach((element) => { element.hidden = element !== section; });
 }
 function hostMatches(url, hostname) { return url.hostname === hostname || url.hostname.endsWith(`.${hostname}`); }
 function isAgentLane(url) { return url.hostname === "localhost" || url.hostname === "127.0.0.1"; }
@@ -36,10 +40,25 @@ async function getSavedCard() {
   return saved;
 }
 async function saveCard(card) {
+  const savedCard = { ...card, cardId: card.cardId || crypto.randomUUID() };
+  const vaultResult = await chrome.storage.local.get(cardVaultStorageKey);
+  const vault = Array.isArray(vaultResult[cardVaultStorageKey]) ? vaultResult[cardVaultStorageKey] : [];
+  const updatedVault = [...vault.filter((entry) => entry.cardId !== savedCard.cardId && entry.number !== savedCard.number), savedCard].slice(-5);
   await Promise.all([
-    chrome.storage.session.set({ [cardStorageKey]: card }),
-    chrome.storage.local.set({ [persistentCardStorageKey]: card }),
+    chrome.storage.session.set({ [cardStorageKey]: savedCard }),
+    chrome.storage.local.set({ [persistentCardStorageKey]: savedCard, [cardVaultStorageKey]: updatedVault }),
   ]);
+  sandboxCards = updatedVault;
+  return savedCard;
+}
+async function getSavedCards() {
+  if (!globalThis.chrome?.storage) return [];
+  const result = await chrome.storage.local.get([cardVaultStorageKey, persistentCardStorageKey]);
+  const vault = Array.isArray(result[cardVaultStorageKey]) ? result[cardVaultStorageKey] : [];
+  const legacy = result[persistentCardStorageKey];
+  if (legacy && !vault.some((card) => card.number === legacy.number)) vault.push({ ...legacy, cardId: legacy.cardId || crypto.randomUUID() });
+  if (vault.length) await chrome.storage.local.set({ [cardVaultStorageKey]: vault.slice(-5) });
+  return vault.slice(-5);
 }
 async function appendCardEvent(type, details = {}) {
   if (!globalThis.chrome?.storage?.session) return;
@@ -62,10 +81,23 @@ async function saveIssuedCard(card) {
 async function getSavedCheckout() {
   if (!globalThis.chrome?.storage?.session) return null;
   const result = await chrome.storage.session.get(checkoutStorageKey);
-  const checkout = result[checkoutStorageKey] || null;
-  return checkout && Date.now() - new Date(checkout.capturedAt).getTime() <= checkoutMaxAgeMs ? checkout : null;
+  let checkout = result[checkoutStorageKey] || null;
+  if (!checkout) {
+    const pending = await chrome.storage.local.get(pendingCheckoutStorageKey);
+    checkout = pending[pendingCheckoutStorageKey] || null;
+    if (checkout) {
+      await chrome.storage.session.set({ [checkoutStorageKey]: checkout });
+      await chrome.storage.local.remove(pendingCheckoutStorageKey);
+    }
+  }
+  if (checkout && Date.now() - new Date(checkout.capturedAt).getTime() <= checkoutMaxAgeMs) return checkout;
+  if (checkout) await chrome.storage.local.remove(pendingCheckoutStorageKey);
+  return null;
 }
-async function saveCheckout(checkout) { await chrome.storage.session.set({ [checkoutStorageKey]: checkout }); }
+async function saveCheckout(checkout) {
+  await chrome.storage.session.set({ [checkoutStorageKey]: checkout });
+  await chrome.storage.local.remove(pendingCheckoutStorageKey);
+}
 function decodePayload(encoded) {
   const normalized = encoded.replaceAll("-", "+").replaceAll("_", "/");
   const binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="));
@@ -115,11 +147,11 @@ async function saveIssuedSandboxCard(reference) {
   if (!parsedCard) return null;
   checkoutSnapshot = await getSavedCheckout();
   const saved = { ...parsedCard, checkoutId: checkoutSnapshot?.checkoutId || null, capturedAt: new Date().toISOString() };
-  await saveCard(saved);
-  await appendCardEvent("card_fields_recovered", { lastFour: saved.number.slice(-4), settlementTx: reference.settlementTx, checkoutId: saved.checkoutId });
+  const stored = await saveCard(saved);
+  await appendCardEvent("card_fields_recovered", { lastFour: stored.number.slice(-4), settlementTx: reference.settlementTx, checkoutId: stored.checkoutId });
   await chrome.storage.session.remove(issuedCardStorageKey);
   issuedCardReference = null;
-  return saved;
+  return stored;
 }
 async function requestSandboxCardRecovery(payload) {
   const response = await fetch("/api/cards/sandbox/recover", {
@@ -202,7 +234,7 @@ async function clearCard() {
   if (globalThis.chrome?.storage) {
     await Promise.all([
       chrome.storage.session.remove([cardStorageKey, issuedCardStorageKey, cardEventStorageKey]),
-      chrome.storage.local.remove(persistentCardStorageKey),
+      chrome.storage.local.remove([persistentCardStorageKey, cardVaultStorageKey]),
     ]);
   }
   sandboxCard = null;
@@ -228,17 +260,57 @@ function toggleCardDetails() {
   elements.revealCard.textContent = "Hide card details";
   elements.revealCard.setAttribute("aria-expanded", "true");
 }
-function renderCard(card) {
+function updateCardPreview(card) {
   sandboxCard = card;
   hideCardDetails();
   document.querySelector("#card-last-four").textContent = `•••• •••• •••• ${card.number.slice(-4)}`;
   document.querySelector("#card-name").textContent = card.name;
   document.querySelector("#card-expiry").textContent = card.expiry;
+}
+
+function renderAddCardOptions(cards) {
+  elements.addCardOptions.replaceChildren();
+  const eligibleCards = cards.filter((card) => card?.kind === "fuji-sandbox" && /^\d{13,19}$/.test(card.number || ""));
+  eligibleCards.forEach((card) => {
+    const label = document.createElement("label");
+    label.className = "card-option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "add-card";
+    input.checked = card.number === sandboxCard?.number;
+    const insufficient = Boolean(checkoutSnapshot && Number.isFinite(card.fundedAmountSgd) && card.fundedAmountSgd < checkoutSnapshot.totalSgd);
+    input.disabled = false;
+    const copy = document.createElement("span");
+    copy.className = "card-option-copy";
+    const strong = document.createElement("strong");
+    strong.textContent = `AgentLane Visa •••• ${card.number.slice(-4)}`;
+    const detail = document.createElement("span");
+    detail.textContent = insufficient
+      ? `${Number(card.fundedAmountSgd || 0).toFixed(2)} XSGD · needs S$${checkoutSnapshot.totalSgd.toFixed(2)}`
+      : `${Number(card.fundedAmountSgd || 0).toFixed(2)} XSGD · expires ${card.expiry}`;
+    copy.append(strong, detail);
+    const status = document.createElement("small");
+    status.textContent = insufficient ? "LOW" : "FUJI";
+    input.addEventListener("change", () => updateCardPreview(card));
+    label.append(input, copy, status);
+    elements.addCardOptions.append(label);
+  });
+  elements.addCardPicker.hidden = eligibleCards.length === 0;
+}
+
+function renderCard(card) {
+  updateCardPreview(card);
   const onForm = isShopeeCardForm(activeUrl);
-  const boundCheckout = checkoutSnapshot && card.checkoutId === checkoutSnapshot.checkoutId;
+  const boundCheckout = Boolean(checkoutSnapshot);
   elements.checkoutGuide.hidden = onForm;
   elements.fillCard.hidden = !onForm;
   elements.fillNote.hidden = !onForm;
+  if (onForm) {
+    renderAddCardOptions(sandboxCards.length ? sandboxCards : [card]);
+    elements.fillCard.textContent = "Add selected card to Shopee";
+    elements.fillNote.textContent = "This fills the selected AgentLane card and submits Shopee's Add Card form. A low balance is shown as a warning only; billing address fields remain untouched.";
+    elements.fillCard.disabled = !boundCheckout;
+  }
   elements.checkoutBinding.hidden = !boundCheckout;
   if (boundCheckout) {
     elements.boundCheckoutTotal.textContent = `S$${checkoutSnapshot.totalSgd.toFixed(2)}`;
@@ -246,6 +318,138 @@ function renderCard(card) {
     elements.boundCheckoutAge.textContent = `Captured ${age === 0 ? "just now" : `${age} min ago`} · ${checkoutSnapshot.itemCount} ${checkoutSnapshot.itemCount === 1 ? "item" : "items"}`;
   }
   showSection(elements.cardReady);
+}
+
+function readShopeeSavedCards() {
+  if (location.hostname !== "shopee.sg" || !location.pathname.startsWith("/checkout")) return [];
+  const controls = [...document.querySelectorAll('[role="radio"], input[type="radio"]')];
+  const cards = [];
+  for (const control of controls) {
+    const ownText = String(control.textContent || "").replace(/\s+/g, " ").trim();
+    if (/^(ShopeePay Balance|PayNow|DBS PayLah!|Google Pay|Credit\s*\/\s*Debit Card|Credit Card Installment|Apple Pay)/i.test(ownText)) continue;
+    let region = control;
+    for (let depth = 0; depth < 5 && region.parentElement; depth += 1) {
+      region = region.parentElement;
+      const text = String(region.innerText || "").replace(/\s+/g, " ").trim();
+      const match = text.match(/(?:\*{4}|•{4})\s*(\d{4})/);
+      if (!match) continue;
+      const disabled = control.disabled || control.getAttribute("aria-disabled") === "true" || /expired/i.test(text);
+      const brand = text.replace(/(?:\*{4}|•{4})\s*\d{4}.*/i, "").trim().slice(0, 40) || "Saved card";
+      if (!cards.some((card) => card.lastFour === match[1])) cards.push({ kind: "shopee-saved", lastFour: match[1], label: `${brand} •••• ${match[1]}`, disabled });
+      break;
+    }
+  }
+  return cards;
+}
+
+function renderPaymentOptions(options) {
+  selectedPaymentOption = options.find((option) => !option.disabled && option.kind === "agentlane") || options.find((option) => !option.disabled) || null;
+  elements.paymentCardOptions.replaceChildren();
+  options.forEach((option, index) => {
+    const label = document.createElement("label");
+    label.className = "card-option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "payment-card";
+    input.value = String(index);
+    input.checked = option === selectedPaymentOption;
+    input.disabled = option.disabled;
+    const copy = document.createElement("span");
+    copy.className = "card-option-copy";
+    const strong = document.createElement("strong");
+    strong.textContent = option.label;
+    const detail = document.createElement("span");
+    const lowBalance = option.kind === "agentlane" && Number.isFinite(option.card?.fundedAmountSgd) && option.card.fundedAmountSgd < checkoutSnapshot.totalSgd;
+    detail.textContent = option.disabled
+      ? "Unavailable"
+      : lowBalance
+        ? `${option.card.fundedAmountSgd.toFixed(2)} XSGD · below S$${checkoutSnapshot.totalSgd.toFixed(2)} (test allowed)`
+        : option.kind === "agentlane" ? "AgentLane sandbox card" : "Saved on Shopee";
+    copy.append(strong, detail);
+    const status = document.createElement("small");
+    status.textContent = lowBalance ? "LOW" : option.kind === "agentlane" ? "FUJI" : "SHOPEE";
+    input.addEventListener("change", () => { selectedPaymentOption = option; });
+    label.append(input, copy, status);
+    elements.paymentCardOptions.append(label);
+  });
+  elements.paymentCardPicker.hidden = options.length === 0;
+  elements.reviewPayment.hidden = !selectedPaymentOption || !checkoutSnapshot;
+  if (checkoutSnapshot) elements.reviewPayment.textContent = `Review payment · S$${checkoutSnapshot.totalSgd.toFixed(2)}`;
+}
+
+async function loadPaymentOptions() {
+  if (!isShopeeCheckout(activeUrl) || !checkoutSnapshot) return;
+  const [result] = await chrome.scripting.executeScript({ target: { tabId: activeTab.id, allFrames: false }, func: readShopeeSavedCards });
+  const options = Array.isArray(result?.result) ? result.result : [];
+  const agentLaneOptions = sandboxCards
+    .filter((card) => card?.kind === "fuji-sandbox" && /^\d{13,19}$/.test(card.number || ""))
+    .slice()
+    .reverse()
+    .map((card) => ({
+      kind: "agentlane",
+      card,
+      lastFour: card.number.slice(-4),
+      label: `AgentLane Visa •••• ${card.number.slice(-4)}`,
+      disabled: false,
+    }));
+  options.unshift(...agentLaneOptions);
+  renderPaymentOptions(options);
+}
+
+function reviewSelectedPayment() {
+  if (!selectedPaymentOption || !checkoutSnapshot) return;
+  const addingAgentLaneCard = selectedPaymentOption.kind === "agentlane";
+  elements.paymentConfirmCard.textContent = selectedPaymentOption.label;
+  elements.paymentConfirmTotal.textContent = `S$${checkoutSnapshot.totalSgd.toFixed(2)}`;
+  elements.paymentConfirmation.querySelector("h2").textContent = addingAgentLaneCard ? "Add this card to Shopee?" : "Place this Shopee order?";
+  elements.paymentConfirmation.querySelector("p:not(.eyebrow):not(.error)").textContent = addingAgentLaneCard
+    ? "Shopee's secure Add Card page will open. Card Companion will pop up there so you can choose and add an AgentLane card."
+    : "This will select the saved card and click Shopee's Place Order. The selected card may be charged if Shopee accepts it.";
+  elements.confirmPayment.textContent = addingAgentLaneCard ? "Continue to Add Card" : "Confirm and pay";
+  elements.paymentConfirmation.hidden = false;
+  elements.reviewPayment.hidden = true;
+  elements.paymentConfirmation.querySelector("button")?.focus();
+}
+
+function cancelSelectedPayment() {
+  elements.paymentConfirmation.hidden = true;
+  elements.reviewPayment.hidden = !selectedPaymentOption;
+  elements.reviewPayment.focus();
+}
+
+async function confirmSelectedPayment() {
+  if (!selectedPaymentOption || !checkoutSnapshot) return;
+  elements.confirmPayment.disabled = true;
+  elements.cancelPayment.disabled = true;
+  elements.confirmPayment.textContent = selectedPaymentOption.kind === "agentlane" ? "Opening Add Card…" : "Paying…";
+  elements.paymentError.hidden = true;
+  try {
+    if (selectedPaymentOption.kind === "agentlane") {
+      sandboxCard = { ...selectedPaymentOption.card, checkoutId: checkoutSnapshot.checkoutId };
+      sandboxCard = await saveCard(sandboxCard);
+      selectedPaymentOption = { ...selectedPaymentOption, card: sandboxCard };
+    }
+    const response = await chrome.runtime.sendMessage({
+      type: "agentlane_pay_checkout",
+      tabId: activeTab.id,
+      checkout: checkoutSnapshot,
+      payment: selectedPaymentOption.kind === "agentlane" ? { kind: "agentlane", card: selectedPaymentOption.card } : selectedPaymentOption,
+    });
+    if (!response?.ok) throw new Error(response?.error || "Shopee payment could not be started.");
+    if (response.awaitingCardChoice) {
+      await appendCardEvent("shopee_add_card_picker_opened", { totalSgd: checkoutSnapshot.totalSgd, lastFour: selectedPaymentOption.lastFour });
+      return;
+    }
+    await appendCardEvent("shopee_place_order_clicked", { totalSgd: checkoutSnapshot.totalSgd, lastFour: selectedPaymentOption.lastFour, paymentKind: selectedPaymentOption.kind });
+    showSection(elements.paymentComplete);
+  } catch (error) {
+    elements.paymentError.textContent = error.message || "Shopee payment could not be started.";
+    elements.paymentError.hidden = false;
+  } finally {
+    elements.confirmPayment.disabled = false;
+    elements.cancelPayment.disabled = false;
+    elements.confirmPayment.textContent = selectedPaymentOption?.kind === "agentlane" ? "Continue to Add Card" : "Confirm and pay";
+  }
 }
 
 function renderCheckoutState(checkout) {
@@ -262,9 +466,16 @@ function renderCheckoutState(checkout) {
     elements.checkoutCardHeading.textContent = `Sandbox Visa •••• ${sandboxCard.number.slice(-4)} ready`;
     elements.checkoutCardCopy.textContent = "Choose Credit/Debit Card and Pay with new card. The extension will verify this captured total before filling.";
     elements.prepareCheckout.hidden = false;
+    elements.useAgentLane.hidden = true;
   } else {
     elements.checkoutCardHeading.textContent = "Checkout is ready for a sandbox Visa";
-    elements.checkoutCardCopy.textContent = "Return to AgentLane, issue the checkout-sized test card, then capture it from the secure card page.";
+    elements.checkoutCardCopy.textContent = "Create a checkout-sized purchase card, then return to Shopee to fill it.";
+    if (procurementContext) {
+      const quote = { version: 1, offerId: procurementContext.offerId, title: procurementContext.title, checkoutTotalSgd: checkout.totalSgd, source: "checkout_total", capturedAt: checkout.capturedAt };
+      elements.useAgentLane.href = `http://localhost:3001/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.textContent = `Purchase now · S$${checkout.totalSgd.toFixed(2)}`;
+      elements.useAgentLane.hidden = false;
+    }
   }
 }
 
@@ -362,7 +573,7 @@ function captureShopeeCheckout(context) {
     const number = Number(String(value || "").replaceAll(",", ""));
     return Number.isFinite(number) && number > 0 ? number : null;
   };
-  const labelPatterns = [/^Total Payment$/i, /^Grand Total$/i, /^Order Total(?:\s*\([^)]*\))?$/i];
+  const labelPatterns = [/^Total Payment\s*:?$/i, /^Grand Total\s*:?$/i, /^Order Total(?:\s*\([^)]*\))?\s*:?$/i];
   let totalSgd = null;
   for (const labelPattern of labelPatterns) {
     const labels = [...document.querySelectorAll("body *")].filter((element) => labelPattern.test(String(element.textContent || "").trim()) && element.children.length <= 1);
@@ -399,8 +610,8 @@ async function refreshLivePrice() {
   elements.refreshPrice.disabled = true;
   elements.quoteError.hidden = true;
   try {
-    if (!procurementContext) throw new Error("Open this Shopee listing from AgentLane once so the quote can be matched to your selected product.");
     const checkoutMode = isShopeeCheckout(activeUrl);
+    if (!checkoutMode && !procurementContext) throw new Error("Open this Shopee listing from AgentLane once so the quote can be matched to your selected product.");
     const results = await chrome.scripting.executeScript({ target: { tabId: activeTab.id, allFrames: false }, func: checkoutMode ? captureShopeeCheckout : readLiveShopeePrice, args: [procurementContext] });
     const captured = results[0]?.result;
     const live = checkoutMode && captured ? { checkoutTotalSgd: captured.totalSgd, source: "checkout_total" } : captured;
@@ -412,12 +623,19 @@ async function refreshLivePrice() {
       await saveCheckout(checkout);
       checkoutSnapshot = checkout;
       renderCheckoutState(checkout);
+      await loadPaymentOptions();
     }
     elements.quoteLabel.textContent = live.checkoutTotalSgd ? "Live checkout total" : live.source === "cart_item" ? "Live cart price" : "Live product price";
     elements.quotePrice.textContent = `S$${amount.toFixed(2)}`;
     elements.quoteResult.hidden = false;
-    elements.useAgentLane.href = `http://localhost:3001/#lastMile=${encodePayload(quote)}`;
-    elements.useAgentLane.hidden = false;
+    if (checkoutMode) {
+      elements.useAgentLane.href = `http://localhost:3001/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.textContent = `Purchase now · S$${amount.toFixed(2)}`;
+      elements.useAgentLane.hidden = Boolean(sandboxCard);
+    } else {
+      elements.quoteCopy.textContent = "Price checked. Choose the intended variant and click Buy Now; the final checkout total will create the card.";
+      elements.useAgentLane.hidden = true;
+    }
   } catch (error) {
     elements.quoteError.textContent = error.message || "Live price refresh failed.";
     elements.quoteError.hidden = false;
@@ -506,12 +724,10 @@ async function prepareCheckout() {
   setAutomationProgress(0, "Reading Shopee's rendered checkout total.");
   try {
     if (!sandboxCard) throw new Error("Recover the sandbox Visa from AgentLane before preparing checkout.");
-    if (!procurementContext) throw new Error("Open this Shopee listing from AgentLane so the checkout can be matched to the selected product.");
     const checkoutResults = await chrome.scripting.executeScript({ target: { tabId: activeTab.id, allFrames: false }, func: captureShopeeCheckout, args: [procurementContext] });
     const captured = checkoutResults[0]?.result;
     if (!captured) throw new Error("Shopee's live checkout total is not visible yet.");
     const checkout = await addCheckoutId(captured);
-    if (Number.isFinite(sandboxCard.fundedAmountSgd) && sandboxCard.fundedAmountSgd < checkout.totalSgd) throw new Error(`The sandbox Visa has S$${sandboxCard.fundedAmountSgd.toFixed(2)}, below this S$${checkout.totalSgd.toFixed(2)} checkout.`);
     await saveCheckout(checkout);
     checkoutSnapshot = checkout;
     sandboxCard = { ...sandboxCard, checkoutId: checkout.checkoutId };
@@ -550,11 +766,11 @@ async function captureCard() {
     if (!card) throw new Error("Could not read all four card fields. Reveal the sandbox card details and try again.");
     checkoutSnapshot = await getSavedCheckout();
     const saved = { ...card, checkoutId: checkoutSnapshot?.checkoutId || null, capturedAt: new Date().toISOString() };
-    await saveCard(saved);
-    await appendCardEvent("card_fields_captured", { lastFour: saved.number.slice(-4), checkoutId: saved.checkoutId });
+    const stored = await saveCard(saved);
+    await appendCardEvent("card_fields_captured", { lastFour: stored.number.slice(-4), checkoutId: stored.checkoutId });
     await chrome.storage.session.remove(issuedCardStorageKey);
     issuedCardReference = null;
-    renderCard(saved);
+    renderCard(stored);
   } catch (error) { elements.captureError.textContent = error.message || "Card capture failed."; elements.captureError.hidden = false; }
   finally { elements.captureCard.disabled = false; }
 }
@@ -564,8 +780,16 @@ async function fillCard() {
     checkoutSnapshot = await getSavedCheckout();
     if (!checkoutSnapshot) throw new Error("Capture the Shopee checkout again before filling the card.");
     if (sandboxCard.kind !== "fuji-sandbox") throw new Error("Only a Fuji sandbox card can be filled.");
-    if (sandboxCard.checkoutId !== checkoutSnapshot.checkoutId) throw new Error("This card is not bound to the current captured checkout. Capture a new sandbox card.");
-    if (Number.isFinite(sandboxCard.fundedAmountSgd) && sandboxCard.fundedAmountSgd < checkoutSnapshot.totalSgd) throw new Error(`The card value is S$${sandboxCard.fundedAmountSgd.toFixed(2)}, below the captured S$${checkoutSnapshot.totalSgd.toFixed(2)} checkout total.`);
+    if (isShopeeCardForm(activeUrl)) {
+      sandboxCard = await saveCard({ ...sandboxCard, checkoutId: checkoutSnapshot.checkoutId });
+      const response = await chrome.runtime.sendMessage({ type: "agentlane_add_selected_card", tabId: activeTab.id, checkout: checkoutSnapshot, card: sandboxCard });
+      if (!response?.ok) throw new Error(response?.error || "Shopee could not add the selected card.");
+      await appendCardEvent("shopee_card_added", { lastFour: sandboxCard.number.slice(-4), checkoutId: checkoutSnapshot.checkoutId });
+      elements.complete.querySelector("h2").textContent = "Card added to Shopee";
+      elements.complete.querySelector(".manual-note").textContent = "Shopee returned to checkout. Card Companion will reopen so you can review payment.";
+      showSection(elements.complete);
+      return;
+    }
     const results = await chrome.scripting.executeScript({ target: { tabId: activeTab.id, allFrames: true }, func: fillShopeeCard, args: [sandboxCard] });
     const best = results.map((entry) => entry.result).filter(Boolean).sort((left, right) => right.filled - left.filled)[0];
     if (!best || best.filled !== 4) throw new Error(`Filled ${best?.filled || 0} of 4 card fields. Shopee may have changed its form.`);
@@ -583,6 +807,9 @@ elements.showRecovery.addEventListener("click", () => {
 elements.recoveryForm.addEventListener("submit", recoverPreviousCard);
 elements.refreshPrice.addEventListener("click", refreshLivePrice);
 elements.prepareCheckout.addEventListener("click", prepareCheckout);
+elements.reviewPayment.addEventListener("click", reviewSelectedPayment);
+elements.cancelPayment.addEventListener("click", cancelSelectedPayment);
+elements.confirmPayment.addEventListener("click", confirmSelectedPayment);
 elements.fillCard.addEventListener("click", fillCard);
 elements.fillAgain.addEventListener("click", fillCard);
 elements.forgetCard.addEventListener("click", clearCard);
@@ -600,7 +827,8 @@ elements.revealCard.addEventListener("click", toggleCardDetails);
   [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   try { activeUrl = new URL(activeTab?.url || "about:blank"); }
   catch { showSection(elements.unsupported); return; }
-  sandboxCard = await getSavedCard();
+  sandboxCards = await getSavedCards();
+  sandboxCard = await getSavedCard() || sandboxCards.at(-1) || null;
   issuedCardReference = await getSavedIssuedCard();
   checkoutSnapshot = await getSavedCheckout();
   if (isStraitsCard(activeUrl)) showSection(elements.capture);
@@ -618,16 +846,22 @@ elements.revealCard.addEventListener("click", toggleCardDetails);
   else if (isShopee(activeUrl)) {
     try { procurementContext = await loadContextFromPage(); } catch { procurementContext = null; }
     if (isShopeeCardForm(activeUrl)) {
+      const boundCards = sandboxCards.filter((card) => card.checkoutId === checkoutSnapshot?.checkoutId);
+      if (boundCards.length) sandboxCard = boundCards.at(-1);
       if (sandboxCard) renderCard(sandboxCard); else showSection(elements.noCard);
     } else {
       if (isShopeeCheckout(activeUrl)) {
         elements.quoteHeading.textContent = "Capture this checkout";
-        elements.quoteCopy.textContent = "Stores the rendered total and item count in session memory so the sandbox Visa can be bound to this order.";
+        elements.quoteCopy.textContent = "Card Companion uses Shopee's rendered total to create a card for this checkout only.";
         elements.refreshPrice.textContent = "Capture checkout";
       }
       showSection(elements.livePrice);
       if (isShopeeCheckout(activeUrl) && sandboxCard) elements.prepareCheckout.hidden = false;
-      if (isShopeeCheckout(activeUrl) && checkoutSnapshot) renderCheckoutState(checkoutSnapshot);
+      if (isShopeeCheckout(activeUrl) && checkoutSnapshot) {
+        renderCheckoutState(checkoutSnapshot);
+        await loadPaymentOptions();
+      }
+      if (isShopeeCheckout(activeUrl) && !checkoutSnapshot) await refreshLivePrice();
     }
   }
   else showSection(elements.unsupported);

@@ -4,17 +4,18 @@ A Manifest V3 companion that verifies a live Shopee price before AgentLane can i
 
 ## Flow
 
-1. Open a Shopee result from AgentLane.
-2. AgentLane opens the merchant page without issuing a card. The extension reads Shopee's authoritative Product/Offer price and displays it on the page.
-3. Choose **Return verified price to AgentLane** in the page banner or popup. Only this fresh extension quote unlocks sandbox-card issuance; the discovery price cannot issue a card.
-4. If Shopee exposes multiple variant prices, select the intended variant and use **Refresh live price** instead of letting AgentLane guess.
-5. Approve the budget-limited sandbox-card issuance in MetaMask. AgentLane exposes the successful card reference to the extension without exposing payment signatures.
-6. Open the extension on AgentLane's successful issuance screen. It safely parses the StraitsX sandbox-card document without rendering it and stores the sandbox card locally until **Forget captured card** is selected.
-7. Use **Reveal card details** in the extension whenever you need to retrieve the full test number and CVV.
-8. Return to the already-open Shopee listing, select the intended variant, and proceed to checkout. The extension does not choose a variant or click **Buy Now**.
-9. At Shopee checkout, click **Prepare card checkout** in the extension.
-10. The extension captures the authoritative checkout total, binds the card, opens **Credit/Debit Card → Pay with new card**, and fills the four card fields.
-11. Review the amount, delivery details, and card form manually. The extension never clicks **Place Order**, **Pay**, or another final-submit control.
+1. Start from an AgentLane Shopee handoff. When Shopee reaches `shopee.sg/cart` with selected items, the extension activates the exact **Check Out** control once; it never selects or changes cart items.
+2. As soon as Shopee reaches `/checkout`, the extension captures the authoritative checkout total and automatically opens Card Companion.
+3. Card Companion lists every card in the local AgentLane vault plus non-expired cards already saved in Shopee. Low-balance AgentLane cards remain selectable and carry a visible warning.
+4. If a checkout-sized AgentLane card is still needed, choose **Purchase now** to send only the checkout total to AgentLane.
+5. Choose **Purchase now** to return the checkout total to AgentLane. MetaMask asks for the required Fuji test authorization and AgentLane creates a checkout-sized, non-spendable sandbox Visa.
+6. Open the extension on AgentLane's success screen. It safely parses and stores the sandbox card until **Forget captured card** is selected.
+7. Return to the already-open Shopee checkout. Card Companion reopens with the available cards without retaining the details of Shopee-saved cards.
+8. If an AgentLane card is chosen, Shopee's secure Add Card page opens. On Chrome 127+, Card Companion opens its own popup automatically on that page and displays up to five checkout-bound AgentLane cards.
+9. Choose **Add selected card to Shopee**. The extension fills only the four card fields, submits Add Card, returns to checkout, and reopens Card Companion.
+10. Select the newly saved card and choose **Review payment**. The extension shows the exact card and checkout total before enabling **Confirm and pay**.
+11. After that explicit confirmation, the background payment worker verifies that the total has not changed and clicks Shopee's exact **Place Order** control.
+12. The original **Prepare card checkout** path remains available when the user wants autofill without order submission.
 
 ## Price accuracy
 
@@ -27,17 +28,19 @@ A Manifest V3 companion that verifies a live Shopee price before AgentLane can i
 ## Security boundary
 
 - The Fuji sandbox card is kept in `chrome.storage.local` until the user chooses **Forget captured card**. A session copy supports fast popup access.
+- A local vault keeps at most five captured AgentLane sandbox cards. Checkout shows every card that can cover the total; the chosen card is then bound to that checkout before Shopee's Add Card step.
 - Sensitive fields are masked by default and appear only after the user chooses **Reveal card details**. They are never written to the browser console.
 - A session-only recovery trail records issuance metadata and the captured card's last four digits, never the full card number or CVV.
-- Legacy auto-checkout state is cleared when the verifier loads; no automated cart or Buy Now job is created.
+- Cart takeover is armed only by a recent AgentLane product handoff, expires after ten minutes, and activates Shopee's exact **Check Out** control only when one or more items are already selected. It never selects items or touches **Place Order**.
+- A prior AgentLane product context is optional. The pending checkout contains only total, currency, item count, pathname, offer ID, and timestamp; the worker moves it into session storage and removes the local copy.
 - The issued-card handoff contains the sandbox card document, card ID, settlement transaction, value, and timestamp. It never stores the wallet signature or payment authorization.
 - The returned HTML is parsed as an inert document; it is never inserted into the extension UI or executed.
-- The extension has narrowly scoped access to `shopee.sg` and `pay.shopee.sg` only so one user-invoked checkout action can cross Shopee's payment iframe. It requests no cookie access, browsing history, clipboard access, or background execution.
+- The extension has narrowly scoped access to `shopee.sg` and `pay.shopee.sg` only so a user-confirmed checkout action can cross Shopee's secure card page. It requests no cookie access, browsing history, or clipboard access.
 - `activeTab` access is granted only when the user clicks the extension.
 - It fills only card number, expiry, CVV, and cardholder name on `pay.shopee.sg/payment-v2/add-card`.
 - A checkout capture contains only total, currency, item count, pathname, offer ID, and timestamp. It does not retain the delivery address or recipient name.
 - Checkout captures expire after 30 minutes, and a card must be bound to the current capture before it can be filled.
-- It does not alter the billing address supplied by Shopee and never submits either Shopee form.
+- It does not alter the billing address supplied by Shopee. The new-card form and **Place Order** are submitted only after the extension shows the selected card and exact total and the user chooses **Confirm and pay**.
 - Fuji sandbox cards cannot spend real money.
 
 ## Load unpacked

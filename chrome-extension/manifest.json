@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "AgentLane Card Companion",
-  "version": "0.11.0",
+  "version": "0.13.0",
   "description": "Verify a live Shopee price before AgentLane can issue a Fuji sandbox Visa.",
-  "minimum_chrome_version": "102",
+  "minimum_chrome_version": "127",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://shopee.sg/*", "https://pay.shopee.sg/*"],
   "content_scripts": [
@@ -13,6 +13,9 @@
       "run_at": "document_idle"
     }
   ],
+  "background": {
+    "service_worker": "payment-worker.js"
+  },
   "action": {
     "default_title": "AgentLane sandbox card",
     "default_popup": "popup.html"

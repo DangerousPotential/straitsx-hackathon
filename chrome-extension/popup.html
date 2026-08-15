@@ -21,8 +21,8 @@
 
       <section id="agentlane" class="state" hidden>
         <span class="state-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg></span>
-        <h2>Generate the procurement card</h2>
-        <p>Select a product in AgentLane and approve the budget-limited Fuji sandbox card. Reopen this extension on the success screen to save it.</p>
+        <h2>Create the purchase card</h2>
+        <p>Continue to Shopee first. After you click Buy Now, Card Companion returns the verified checkout total here to create the card.</p>
         <button id="show-recovery" class="button secondary" type="button">Recover previous card</button>
         <form id="recovery-form" class="recovery-form" hidden>
           <div class="recovery-heading">
@@ -70,14 +70,14 @@
       <section id="no-card" class="state" hidden>
         <span class="state-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14v10H5z"/><path d="M9 15h6M12 12v6"/></svg></span>
         <h2>No sandbox card captured</h2>
-        <p>Generate the card in AgentLane, then open this extension on the successful issuance screen to save it.</p>
+        <p>Return to the verified checkout banner, choose Purchase now, then reopen this extension after the card is created.</p>
       </section>
 
       <section id="live-price" hidden>
         <div class="packet-card">
           <span class="pill">Live Shopee page</span>
-          <h2 id="quote-heading">Refresh the last-mile price</h2>
-          <p id="quote-copy" class="section-copy">Reads the price rendered in this tab, including the selected cart item or checkout total.</p>
+          <h2 id="quote-heading">Continue on Shopee</h2>
+          <p id="quote-copy" class="section-copy">From the cart, click Check Out. Card Companion will reopen on checkout with your available cards.</p>
         </div>
         <button id="refresh-price" class="button primary" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M18 12a6 6 0 0 0-10.5-4M6 12a6 6 0 0 0 10.5 4"/></svg>Refresh live price</button>
         <button id="prepare-checkout" class="button primary checkout-action" type="button" hidden><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7.5h14v10H5z"/><path d="M5 10.5h14M8 14h3"/></svg>Prepare card checkout</button>
@@ -102,11 +102,34 @@
           <h2 id="checkout-card-heading">Sandbox card ready</h2>
           <p id="checkout-card-copy"></p>
         </div>
-        <a id="use-agentlane" class="button secondary" href="#" target="_blank" rel="noreferrer" hidden>Return verified price to AgentLane</a>
+        <fieldset id="payment-card-picker" class="card-picker" hidden>
+          <legend>Choose a card</legend>
+          <div id="payment-card-options" class="card-options"></div>
+        </fieldset>
+        <button id="review-payment" class="button primary" type="button" hidden>Review payment</button>
+        <div id="payment-confirmation" class="payment-confirmation" hidden>
+          <p class="eyebrow">Final confirmation</p>
+          <h2>Place this Shopee order?</h2>
+          <dl class="payment-summary">
+            <div><dt>Card</dt><dd id="payment-confirm-card"></dd></div>
+            <div><dt>Total</dt><dd id="payment-confirm-total"></dd></div>
+          </dl>
+          <p>This will select the card and click Shopee’s <strong>Place Order</strong>. The selected card may be charged if Shopee accepts it.</p>
+          <div class="confirmation-actions">
+            <button id="cancel-payment" class="button secondary" type="button">Cancel</button>
+            <button id="confirm-payment" class="button primary" type="button">Confirm and pay</button>
+          </div>
+          <p id="payment-error" class="error" role="alert" hidden></p>
+        </div>
+        <a id="use-agentlane" class="button secondary" href="#" target="_blank" rel="noreferrer" hidden>Purchase now</a>
         <p id="quote-error" class="error" role="alert" hidden></p>
       </section>
 
       <section id="card-ready" hidden>
+        <fieldset id="add-card-picker" class="card-picker" hidden>
+          <legend>Choose an AgentLane card to add</legend>
+          <div id="add-card-options" class="card-options"></div>
+        </fieldset>
         <div class="virtual-card" aria-label="Captured sandbox card">
           <div class="virtual-card-top"><span>AgentLane test Visa</span><span>FUJI</span></div>
           <p id="card-last-four" class="card-number"></p>
@@ -135,6 +158,11 @@
         <p class="manual-note"><strong>No payment was submitted.</strong> Review the amount, delivery details, and card form. Place Order remains under your control.</p>
         <button id="fill-again" class="button secondary" type="button">Fill again</button>
         <button id="forget-card-complete" class="text-button" type="button">Forget captured card</button>
+      </section>
+
+      <section id="payment-complete" hidden aria-live="polite">
+        <div class="result-banner pass"><span class="state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9"/></svg></span><div><p class="eyebrow">Submitted to Shopee</p><h2>Order payment started</h2></div></div>
+        <p class="manual-note">Shopee received the Place Order action. Review the checkout tab for the final payment or order status.</p>
       </section>
 
       <footer>Sandbox cards cannot spend real money. The test card stays in this extension until you forget it; checkout data remains session-only.</footer>
