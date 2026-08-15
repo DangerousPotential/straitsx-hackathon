@@ -14,17 +14,31 @@ export const trustPolicy: TrustPolicy = {
 };
 
 export function addressChangesPer90Days(offer: ProductOfferBase) {
+  if (
+    offer.seller.paymentAddressChanges === null ||
+    offer.seller.monitoringDays === null ||
+    offer.seller.monitoringDays <= 0
+  )
+    return null;
+  return offer.seller.paymentAddressChanges / (offer.seller.monitoringDays / 90);
+}
+
+export function hasCompleteSellerEvidence(offer: ProductOfferBase) {
   return (
-    offer.seller.paymentAddressChanges / (offer.seller.monitoringDays / 90)
+    offer.seller.successfulTransactions !== null &&
+    addressChangesPer90Days(offer) !== null
   );
 }
 
 export function passesTrustScreen(offer: ProductOfferBase) {
+  const changeRate = addressChangesPer90Days(offer);
   return (
     offer.source.checkedMinutesAgo <= trustPolicy.maxDataAgeMinutes &&
-    offer.seller.successfulTransactions >=
-      trustPolicy.minimumSuccessfulTransactions &&
-    addressChangesPer90Days(offer) <= trustPolicy.maximumAddressChangesPer90Days
+    (offer.seller.successfulTransactions === null ||
+      offer.seller.successfulTransactions >=
+        trustPolicy.minimumSuccessfulTransactions) &&
+    (changeRate === null ||
+      changeRate <= trustPolicy.maximumAddressChangesPer90Days)
   );
 }
 
@@ -32,7 +46,8 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
-function deliveryScore(delivery: string) {
+function deliveryScore(delivery: string | null) {
+  if (!delivery) return 40;
   const normalized = delivery.toLowerCase();
   if (normalized.includes("today") || normalized.includes("same-day"))
     return 100;
@@ -45,26 +60,30 @@ function deliveryScore(delivery: string) {
 
 function rankingWeights(priorities: string[]): RankingFactors {
   const weights: RankingFactors = {
-    trust: 35,
-    quality: 25,
-    value: 25,
-    delivery: 15,
+    trust: 30,
+    fit: 25,
+    quality: 20,
+    value: 15,
+    delivery: 10,
   };
   const normalized = priorities.map((priority) => priority.toLowerCase());
   if (normalized.some((priority) => /review|quality/.test(priority))) {
     weights.quality += 8;
-    weights.value -= 4;
-    weights.delivery -= 4;
+    weights.fit -= 3;
+    weights.value -= 3;
+    weights.delivery -= 2;
   }
   if (normalized.some((priority) => /fast|delivery/.test(priority))) {
     weights.delivery += 10;
-    weights.quality -= 5;
-    weights.value -= 5;
+    weights.fit -= 3;
+    weights.quality -= 4;
+    weights.value -= 3;
   }
   if (normalized.some((priority) => /value|price|budget/.test(priority))) {
     weights.value += 8;
-    weights.quality -= 4;
-    weights.delivery -= 4;
+    weights.fit -= 3;
+    weights.quality -= 3;
+    weights.delivery -= 2;
   }
   return weights;
 }
@@ -75,30 +94,45 @@ function scoreOffer(
   weights: RankingFactors,
 ) {
   const authority =
-    offer.source.authority === "Official marketplace feed" ? 100 : 88;
+    offer.source.authority === "Official marketplace feed"
+      ? 100
+      : offer.source.authority === "Verified merchant listing"
+        ? 88
+        : 76;
   const freshness = clampScore(
     100 - (offer.source.checkedMinutesAgo / trustPolicy.maxDataAgeMinutes) * 40,
   );
-  const transactionConfidence = clampScore(
-    55 +
-      (Math.log10(Math.max(offer.seller.successfulTransactions, 100) / 100) /
-        Math.log10(1000)) *
-        45,
-  );
-  const addressStability = clampScore(
-    100 -
-      (addressChangesPer90Days(offer) /
-        trustPolicy.maximumAddressChangesPer90Days) *
-        50,
-  );
+  const transactionConfidence =
+    offer.seller.successfulTransactions === null
+      ? 35
+      : clampScore(
+          55 +
+            (Math.log10(
+              Math.max(offer.seller.successfulTransactions, 100) / 100,
+            ) /
+              Math.log10(1000)) *
+              45,
+        );
+  const changeRate = addressChangesPer90Days(offer);
+  const addressStability =
+    changeRate === null
+      ? 35
+      : clampScore(
+          100 -
+            (changeRate / trustPolicy.maximumAddressChangesPer90Days) * 50,
+        );
   const trust =
     authority * 0.35 +
     freshness * 0.2 +
     transactionConfidence * 0.25 +
     addressStability * 0.2;
   const quality =
-    (offer.rating / 5) * 75 +
-    Math.min(Math.log10(offer.reviewCount + 1) / 4, 1) * 25;
+    offer.rating === null
+      ? 35
+      : (offer.rating / 5) * 75 +
+        (offer.reviewCount === null
+          ? 0
+          : Math.min(Math.log10(offer.reviewCount + 1) / 4, 1) * 25);
   const savingsRate = Math.max(
     0,
     (intent.maxBudget - offer.price) / intent.maxBudget,
@@ -106,6 +140,7 @@ function scoreOffer(
   const value = clampScore(65 + savingsRate * 35);
   const factors: RankingFactors = {
     trust: Math.round(trust),
+    fit: Math.round(clampScore(offer.requestFitScore ?? 75)),
     quality: Math.round(quality),
     value: Math.round(value),
     delivery: Math.round(deliveryScore(offer.delivery)),
@@ -135,6 +170,7 @@ export function rankOffers(
     );
   const factorLabels: Record<keyof RankingFactors, string> = {
     trust: "seller trust",
+    fit: "request fit",
     quality: "quality evidence",
     value: "value",
     delivery: "delivery speed",

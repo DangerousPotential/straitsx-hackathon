@@ -1,7 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { addressChangesPer90Days, searchCatalog } from "@/lib/catalog";
+import {
+  addressChangesPer90Days,
+  hasCompleteSellerEvidence,
+  searchCatalog,
+} from "@/lib/catalog";
 import type {
   BudgetPolicy,
   ProductOffer,
@@ -15,7 +19,7 @@ const initial = searchCatalog(
   "wireless earbuds under $30, reviews and fast delivery",
 );
 const purchaseSteps = [
-  "Rechecked data and seller trust",
+  "Rechecked source and seller evidence",
   "Opened merchant",
   "Matched the exact product",
   "Added 1 item to cart",
@@ -35,7 +39,7 @@ const agentSteps = [
   {
     id: "procuring",
     label: "Procuring options",
-    detail: "Checking seller and payment-address history",
+    detail: "Checking available seller and payment-address evidence",
   },
 ] as const;
 type AgentStage = (typeof agentSteps)[number]["id"] | "ready";
@@ -193,8 +197,10 @@ function ProductListItem({
   index: number;
 }) {
   const changeRate = addressChangesPer90Days(offer);
+  const completeSellerEvidence = hasCompleteSellerEvidence(offer);
   const factorLabels: Record<keyof RankingFactors, string> = {
     trust: "Trust",
+    fit: "Request fit",
     quality: "Quality",
     value: "Value",
     delivery: "Delivery",
@@ -222,8 +228,17 @@ function ProductListItem({
               </span>
             </div>
             <p className="mt-1 text-sm font-semibold text-[#5f6b64]">
-              {offer.merchant} · <span className="text-[#9a681f]">★</span>{" "}
-              {offer.rating} ({offer.reviewCount.toLocaleString()})
+              {offer.merchant} ·{" "}
+              {offer.rating === null ? (
+                "Rating unavailable"
+              ) : (
+                <>
+                  <span className="text-[#9a681f]">★</span> {offer.rating}
+                  {offer.reviewCount === null
+                    ? ""
+                    : ` (${offer.reviewCount.toLocaleString()})`}
+                </>
+              )}
             </p>
           </div>
           <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
@@ -239,7 +254,7 @@ function ProductListItem({
           {offer.ranking.summary}
         </p>
         <dl
-          className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"
+          className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5"
           aria-label={`Ranking factors for ${offer.title}`}
         >
           {(Object.keys(factorLabels) as Array<keyof RankingFactors>).map(
@@ -275,24 +290,49 @@ function ProductListItem({
           </li>
           <li>
             <span className="font-bold text-[#2d3832]">Delivery:</span>{" "}
-            {offer.delivery}
+            {offer.delivery ?? "Not included in listing metadata"}
           </li>
+          {offer.availability && (
+            <li>
+              <span className="font-bold text-[#2d3832]">Availability:</span>{" "}
+              {offer.availability}
+            </li>
+          )}
+          {offer.listingUrl && (
+            <li>
+              <a
+                href={offer.listingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="focus-ring inline-flex items-center gap-1 rounded font-bold text-[#1f5638] underline decoration-[#93a79a] underline-offset-2"
+              >
+                Open source listing <Icon name="external" className="h-4 w-4" />
+              </a>
+            </li>
+          )}
           <li>
             <span className="font-bold text-[#2d3832]">Source:</span>{" "}
             {offer.source.authority} · {offer.source.name}, checked{" "}
-            {offer.source.checkedMinutesAgo} min ago
+            {offer.source.checkedMinutesAgo === 0
+              ? "just now"
+              : `${offer.source.checkedMinutesAgo} min ago`}
           </li>
           <li>
             <span className="font-bold text-[#2d3832]">Seller:</span>{" "}
-            {offer.seller.successfulTransactions.toLocaleString()} successful
-            transactions · {offer.seller.paymentAddressChanges} address{" "}
-            {offer.seller.paymentAddressChanges === 1 ? "change" : "changes"} in{" "}
-            {offer.seller.monitoringDays} days ({changeRate.toFixed(1)} / 90d)
+            {offer.seller.name ?? "Name unavailable"} ·{" "}
+            {completeSellerEvidence && changeRate !== null
+              ? `${offer.seller.successfulTransactions!.toLocaleString()} successful transactions · ${offer.seller.paymentAddressChanges} address ${offer.seller.paymentAddressChanges === 1 ? "change" : "changes"} in ${offer.seller.monitoringDays} days (${changeRate.toFixed(1)} / 90d)`
+              : "transaction and payment-address history unavailable"}
           </li>
         </ul>
         <div className="mt-4 flex items-center justify-between gap-4">
-          <span className="flex items-center gap-2 text-xs font-extrabold text-[#1f5638]">
-            <Icon name="shield" className="h-4 w-4" /> Trust screen passed
+          <span
+            className={`flex items-center gap-2 text-xs font-extrabold ${completeSellerEvidence ? "text-[#1f5638]" : "text-[#7a5c24]"}`}
+          >
+            <Icon name="shield" className="h-4 w-4" />{" "}
+            {completeSellerEvidence
+              ? "Complete seller evidence"
+              : "Limited seller evidence"}
           </span>
           <button
             onClick={() => onBuy(offer)}
@@ -608,19 +648,18 @@ function PurchasePanel({
               </div>
               <div className="mt-4 rounded-2xl border border-[#cddfcf] bg-[#f7faf3] p-4">
                 <div className="flex items-center gap-2 font-extrabold text-[#1f5638]">
-                  <Icon name="shield" className="h-5 w-5" /> Seller trust
-                  rechecked
+                  <Icon name="shield" className="h-5 w-5" /> Seller evidence
+                  reviewed
                 </div>
                 <p className="mt-2 text-xs font-semibold leading-5 text-[#526159]">
                   {offer.source.authority}, checked{" "}
-                  {offer.source.checkedMinutesAgo} min ago.{" "}
-                  {offer.seller.successfulTransactions.toLocaleString()}{" "}
-                  successful transactions and{" "}
-                  {offer.seller.paymentAddressChanges} payment address{" "}
-                  {offer.seller.paymentAddressChanges === 1
-                    ? "change"
-                    : "changes"}{" "}
-                  across {offer.seller.monitoringDays} monitored days.
+                  {offer.source.checkedMinutesAgo === 0
+                    ? "just now"
+                    : `${offer.source.checkedMinutesAgo} min ago`}
+                  .{" "}
+                  {hasCompleteSellerEvidence(offer)
+                    ? `${offer.seller.successfulTransactions!.toLocaleString()} successful transactions and ${offer.seller.paymentAddressChanges} payment-address ${offer.seller.paymentAddressChanges === 1 ? "change" : "changes"} across ${offer.seller.monitoringDays} monitored days.`
+                    : "Successful-transaction and payment-address history were not supplied by this listing source, so they are marked unavailable and penalized in the trust score."}
                 </p>
               </div>
               <div className="mt-5 rounded-2xl border border-[#dfe4df] bg-white p-5">
@@ -781,7 +820,7 @@ export function CommerceWorkspace({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<ProductOffer | null>(null);
-  const resultLabel = `${data.offers.length} trusted options across ${new Set(data.offers.map((offer) => offer.merchant)).size} stores`;
+  const resultLabel = `${data.offers.length} ranked options across ${new Set(data.offers.map((offer) => offer.merchant)).size} stores`;
   async function submit(event: FormEvent) {
     event.preventDefault();
     const message = query.trim();
@@ -850,7 +889,7 @@ export function CommerceWorkspace({
             What should I procure?
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-center text-base leading-7 text-[#68736c]">
-            Describe what you need. I&apos;ll simulate suitable products, assess
+            Describe what you need. I&apos;ll find suitable products, assess
             the data and sellers, and handle checkout after you choose.
           </p>
           <div className="mt-6">
@@ -883,7 +922,7 @@ export function CommerceWorkspace({
           </div>
           <p className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-[#87908a]">
             <Icon name="shield" className="h-4 w-4" /> Recommendations are
-            trust-screened before comparison
+            evidence-screened before comparison
           </p>
         </div>
       ) : (
@@ -974,9 +1013,9 @@ export function CommerceWorkspace({
                         <strong className="text-[#17241d]">
                           {resultLabel}
                         </strong>
-                        . Each passed checks for source recency and authority,
-                        seller transaction history, and payment-address
-                        stability.
+                        . Each passed the available-evidence screen. Missing
+                        seller transaction or payment-address data is shown
+                        explicitly and reduces the trust score.
                       </p>
                       <p className="mt-2 flex items-start gap-2 rounded-lg bg-[#f4f1e8] px-3 py-2 text-xs font-semibold leading-5 text-[#6c5b37]">
                         <Icon
@@ -1011,9 +1050,11 @@ export function CommerceWorkspace({
                               How procurement ranking works
                             </summary>
                             <p className="mt-2 leading-5">
-                              Trust screening is mandatory. Passing products are
-                              then ranked using your request priorities: trust{" "}
-                              {data.offers[0].ranking.weights.trust}%, quality{" "}
+                              Source recency is mandatory; unavailable seller
+                              evidence is penalized rather than invented. Products
+                              are ranked using your request priorities: trust{" "}
+                              {data.offers[0].ranking.weights.trust}%, request fit{" "}
+                              {data.offers[0].ranking.weights.fit}%, quality{" "}
                               {data.offers[0].ranking.weights.quality}%, value{" "}
                               {data.offers[0].ranking.weights.value}%, and delivery{" "}
                               {data.offers[0].ranking.weights.delivery}%. Ties favor
