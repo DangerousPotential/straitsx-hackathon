@@ -2,7 +2,7 @@
 
 A Manifest V3 companion that verifies a live Shopee price before AgentLane can issue a non-spendable StraitsX Fuji sandbox Visa.
 
-AgentLane production app: [https://straitsx-hackathon.vercel.app](https://straitsx-hackathon.vercel.app)
+AgentLane production app: [https://straitsx-hackathon.vercel.app/agent](https://straitsx-hackathon.vercel.app/agent)
 
 ## Flow
 

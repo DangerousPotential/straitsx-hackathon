@@ -5,10 +5,22 @@ import "./globals.css";
 const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AgentLane — Shop with intent",
-  description: "An AI commerce agent powered by XSGD on Avalanche.",
+  metadataBase: new URL("https://straitsx-hackathon.vercel.app"),
+  title: {
+    default: "AgentLane — Guarded agentic commerce",
+    template: "%s",
+  },
+  description:
+    "An AI procurement agent that moves from shopping intent to verified checkout with XSGD on Avalanche.",
+  openGraph: {
+    title: "AgentLane — Guarded agentic commerce",
+    description:
+      "AI procurement, live checkout verification, policy-bounded XSGD authorization, and explicit human confirmation.",
+    type: "website",
+    url: "/",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className={manrope.variable}><body>{children}</body></html>;
+  return <html lang="en" className={manrope.variable} data-scroll-behavior="smooth"><body>{children}</body></html>;
 }

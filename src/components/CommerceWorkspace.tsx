@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   addressChangesPer90Days,
   hasCompleteSellerEvidence,
@@ -1007,15 +1008,15 @@ export function CommerceWorkspace({
       )}
       <header className="sticky top-0 z-40 border-b border-[#e1e5e1] bg-[#f8f9f5]/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-4 sm:px-6">
-          <a
-            href="#"
+          <Link
+            href="/"
             className="focus-ring flex items-center gap-2.5 rounded-lg font-extrabold tracking-[-.03em]"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1f5638] text-[#dff45c]">
               <Icon name="spark" className="h-4 w-4" />
             </span>
             <span className="text-lg">AgentLane</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-3">
             <span className="hidden items-center gap-2 text-xs font-bold text-[#68736c] sm:flex">
               <span className="h-2 w-2 rounded-full bg-[#8aaa3e]" /> Procurement

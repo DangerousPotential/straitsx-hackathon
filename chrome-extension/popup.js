@@ -10,7 +10,8 @@ const contextStorageKey = "agentlaneProcurementContext";
 const checkoutStorageKey = "agentlaneShopeeCheckout";
 const pendingCheckoutStorageKey = "agentlanePendingShopeeCheckout";
 const checkoutMaxAgeMs = 30 * 60 * 1000;
-const agentLaneOrigin = "https://straitsx-hackathon.vercel.app";
+const agentLaneAppUrl = "https://straitsx-hackathon.vercel.app/agent";
+const agentLaneOrigin = new URL(agentLaneAppUrl).origin;
 let activeTab;
 let activeUrl;
 let sandboxCard;
@@ -473,7 +474,7 @@ function renderCheckoutState(checkout) {
     elements.checkoutCardCopy.textContent = "Create a checkout-sized purchase card, then return to Shopee to fill it.";
     if (procurementContext) {
       const quote = { version: 1, offerId: procurementContext.offerId, title: procurementContext.title, checkoutTotalSgd: checkout.totalSgd, source: "checkout_total", capturedAt: checkout.capturedAt };
-      elements.useAgentLane.href = `${agentLaneOrigin}/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.href = `${agentLaneAppUrl}/#lastMile=${encodePayload(quote)}`;
       elements.useAgentLane.textContent = `Purchase now · S$${checkout.totalSgd.toFixed(2)}`;
       elements.useAgentLane.hidden = false;
     }
@@ -630,7 +631,7 @@ async function refreshLivePrice() {
     elements.quotePrice.textContent = `S$${amount.toFixed(2)}`;
     elements.quoteResult.hidden = false;
     if (checkoutMode) {
-      elements.useAgentLane.href = `${agentLaneOrigin}/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.href = `${agentLaneAppUrl}/#lastMile=${encodePayload(quote)}`;
       elements.useAgentLane.textContent = `Purchase now · S$${amount.toFixed(2)}`;
       elements.useAgentLane.hidden = Boolean(sandboxCard);
     } else {
