@@ -1,4 +1,10 @@
-import type { ProductOffer, TrustPolicy } from "@/types/commerce";
+import type {
+  ProductOffer,
+  ProductOfferBase,
+  RankingFactors,
+  ShoppingIntent,
+  TrustPolicy,
+} from "@/types/commerce";
 import { getBudgetPolicy } from "@/lib/budget";
 
 export const trustPolicy: TrustPolicy = {
@@ -7,13 +13,13 @@ export const trustPolicy: TrustPolicy = {
   maximumAddressChangesPer90Days: 2,
 };
 
-export function addressChangesPer90Days(offer: ProductOffer) {
+export function addressChangesPer90Days(offer: ProductOfferBase) {
   return (
     offer.seller.paymentAddressChanges / (offer.seller.monitoringDays / 90)
   );
 }
 
-export function passesTrustScreen(offer: ProductOffer) {
+export function passesTrustScreen(offer: ProductOfferBase) {
   return (
     offer.source.checkedMinutesAgo <= trustPolicy.maxDataAgeMinutes &&
     offer.seller.successfulTransactions >=
@@ -22,7 +28,138 @@ export function passesTrustScreen(offer: ProductOffer) {
   );
 }
 
-const catalog: Record<string, ProductOffer[]> = {
+function clampScore(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function deliveryScore(delivery: string) {
+  const normalized = delivery.toLowerCase();
+  if (normalized.includes("today") || normalized.includes("same-day"))
+    return 100;
+  if (normalized.includes("tomorrow") || normalized.includes("next-day"))
+    return 92;
+  const days = normalized.match(/(\d+)\s*days?/i);
+  if (!days) return 60;
+  return clampScore(92 - (Number(days[1]) - 1) * 12);
+}
+
+function rankingWeights(priorities: string[]): RankingFactors {
+  const weights: RankingFactors = {
+    trust: 35,
+    quality: 25,
+    value: 25,
+    delivery: 15,
+  };
+  const normalized = priorities.map((priority) => priority.toLowerCase());
+  if (normalized.some((priority) => /review|quality/.test(priority))) {
+    weights.quality += 8;
+    weights.value -= 4;
+    weights.delivery -= 4;
+  }
+  if (normalized.some((priority) => /fast|delivery/.test(priority))) {
+    weights.delivery += 10;
+    weights.quality -= 5;
+    weights.value -= 5;
+  }
+  if (normalized.some((priority) => /value|price|budget/.test(priority))) {
+    weights.value += 8;
+    weights.quality -= 4;
+    weights.delivery -= 4;
+  }
+  return weights;
+}
+
+function scoreOffer(
+  offer: ProductOfferBase,
+  intent: ShoppingIntent,
+  weights: RankingFactors,
+) {
+  const authority =
+    offer.source.authority === "Official marketplace feed" ? 100 : 88;
+  const freshness = clampScore(
+    100 - (offer.source.checkedMinutesAgo / trustPolicy.maxDataAgeMinutes) * 40,
+  );
+  const transactionConfidence = clampScore(
+    55 +
+      (Math.log10(Math.max(offer.seller.successfulTransactions, 100) / 100) /
+        Math.log10(1000)) *
+        45,
+  );
+  const addressStability = clampScore(
+    100 -
+      (addressChangesPer90Days(offer) /
+        trustPolicy.maximumAddressChangesPer90Days) *
+        50,
+  );
+  const trust =
+    authority * 0.35 +
+    freshness * 0.2 +
+    transactionConfidence * 0.25 +
+    addressStability * 0.2;
+  const quality =
+    (offer.rating / 5) * 75 +
+    Math.min(Math.log10(offer.reviewCount + 1) / 4, 1) * 25;
+  const savingsRate = Math.max(
+    0,
+    (intent.maxBudget - offer.price) / intent.maxBudget,
+  );
+  const value = clampScore(65 + savingsRate * 35);
+  const factors: RankingFactors = {
+    trust: Math.round(trust),
+    quality: Math.round(quality),
+    value: Math.round(value),
+    delivery: Math.round(deliveryScore(offer.delivery)),
+  };
+  const overallScore = Math.round(
+    Object.entries(factors).reduce(
+      (total, [factor, score]) =>
+        total + score * (weights[factor as keyof RankingFactors] / 100),
+      0,
+    ),
+  );
+  return { factors, overallScore };
+}
+
+export function rankOffers(
+  offers: ProductOfferBase[],
+  intent: ShoppingIntent,
+): ProductOffer[] {
+  const weights = rankingWeights(intent.priorities);
+  const scored = offers
+    .map((offer) => ({ offer, ...scoreOffer(offer, intent, weights) }))
+    .sort(
+      (a, b) =>
+        b.overallScore - a.overallScore ||
+        b.factors.trust - a.factors.trust ||
+        a.offer.price - b.offer.price,
+    );
+  const factorLabels: Record<keyof RankingFactors, string> = {
+    trust: "seller trust",
+    quality: "quality evidence",
+    value: "value",
+    delivery: "delivery speed",
+  };
+  return scored.map(({ offer, factors, overallScore }, index) => {
+    const strongestFactor = (
+      Object.keys(factors) as Array<keyof RankingFactors>
+    ).sort((a, b) => factors[b] - factors[a])[0];
+    return {
+      ...offer,
+      ranking: {
+        rank: index + 1,
+        overallScore,
+        factors,
+        weights,
+        summary:
+          index === 0
+            ? `Best overall balance, led by ${factorLabels[strongestFactor]}.`
+            : `Strongest on ${factorLabels[strongestFactor]} among the remaining options.`,
+      },
+    };
+  });
+}
+
+const catalog: Record<string, ProductOfferBase[]> = {
   earbuds: [
     {
       id: "p20i",
@@ -274,19 +411,21 @@ export function searchCatalog(message: string, selectedBudget?: number) {
   const withinBudget = catalog[key].filter(
     (o) => o.price <= Math.min(maxBudget, maximumProductPrice) + 0.01,
   );
-  const offers = withinBudget.filter(passesTrustScreen);
+  const screenedOffers = withinBudget.filter(passesTrustScreen);
+  const intent: ShoppingIntent = {
+    query:
+      key === "mouse"
+        ? "wireless mouse"
+        : key === "speaker"
+          ? "portable speaker"
+          : "wireless earbuds",
+    maxBudget,
+    priorities,
+    requirements: [key === "speaker" ? "Portable" : "Wireless"],
+  };
+  const offers = rankOffers(screenedOffers, intent);
   return {
-    intent: {
-      query:
-        key === "mouse"
-          ? "wireless mouse"
-          : key === "speaker"
-            ? "portable speaker"
-            : "wireless earbuds",
-      maxBudget,
-      priorities,
-      requirements: [key === "speaker" ? "Portable" : "Wireless"],
-    },
+    intent,
     offers,
     trustPolicy,
     budgetPolicy,

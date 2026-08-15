@@ -1,16 +1,16 @@
 import "server-only";
 
 import { getBudgetPolicy } from "@/lib/budget";
-import { passesTrustScreen, trustPolicy } from "@/lib/catalog";
+import { passesTrustScreen, rankOffers, trustPolicy } from "@/lib/catalog";
 import type {
-  ProductOffer,
+  ProductOfferBase,
   SearchResponse,
   ShoppingIntent,
 } from "@/types/commerce";
 
 type SimulationPayload = {
   intent: ShoppingIntent;
-  offers: Array<Omit<ProductOffer, "id" | "artColor">>;
+  offers: Array<Omit<ProductOfferBase, "id" | "artColor">>;
 };
 
 const schema = {
@@ -194,12 +194,12 @@ export async function generateProcurementSimulation(
   ) as unknown;
   if (!isSimulationPayload(parsed))
     throw new Error("OpenAI returned an invalid procurement result.");
-  const palette: Record<ProductOffer["merchant"], string> = {
+  const palette: Record<ProductOfferBase["merchant"], string> = {
     Lazada: "#dceab7",
     Shopee: "#cddfd9",
     "Amazon SG": "#eddcc5",
   };
-  const offers = parsed.offers
+  const screenedOffers = parsed.offers
     .map((offer, index) => ({
       ...offer,
       id: offerId(offer.title, index),
@@ -209,8 +209,10 @@ export async function generateProcurementSimulation(
       (offer) =>
         offer.price <= maximumProductPrice + 0.01 && passesTrustScreen(offer),
     );
+  const intent = { ...parsed.intent, maxBudget: maximumProductPrice };
+  const offers = rankOffers(screenedOffers, intent);
   return {
-    intent: { ...parsed.intent, maxBudget: maximumProductPrice },
+    intent,
     offers,
     trustPolicy,
     budgetPolicy,

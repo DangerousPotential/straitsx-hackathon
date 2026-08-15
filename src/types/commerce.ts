@@ -11,7 +11,22 @@ export type SellerProfile = {
   monitoringDays:number;
 };
 
-export type ProductOffer = {
+export type RankingFactors = {
+  trust:number;
+  quality:number;
+  value:number;
+  delivery:number;
+};
+
+export type OfferRanking = {
+  rank:number;
+  overallScore:number;
+  factors:RankingFactors;
+  weights:RankingFactors;
+  summary:string;
+};
+
+export type ProductOfferBase = {
   id:string;
   title:string;
   merchant:"Lazada"|"Shopee"|"Amazon SG";
@@ -26,6 +41,7 @@ export type ProductOffer = {
   source:DataSource;
   seller:SellerProfile;
 };
+export type ProductOffer = ProductOfferBase & { ranking:OfferRanking };
 export type ShoppingIntent = { query:string; maxBudget:number; priorities:string[]; requirements:string[] };
 export type TrustPolicy = { maxDataAgeMinutes:number; minimumSuccessfulTransactions:number; maximumAddressChangesPer90Days:number };
 export type BudgetPolicy = { userTransactionLimitSgd:number; providerTransactionLimitSgd:number; effectiveTransactionLimitSgd:number; estimatedFeesSgd:number };

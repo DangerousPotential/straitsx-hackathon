@@ -5,6 +5,7 @@ import { addressChangesPer90Days, searchCatalog } from "@/lib/catalog";
 import type {
   BudgetPolicy,
   ProductOffer,
+  RankingFactors,
   SearchResponse,
 } from "@/types/commerce";
 import { WalletButton } from "@/components/WalletButton";
@@ -192,15 +193,23 @@ function ProductListItem({
   index: number;
 }) {
   const changeRate = addressChangesPer90Days(offer);
+  const factorLabels: Record<keyof RankingFactors, string> = {
+    trust: "Trust",
+    quality: "Quality",
+    value: "Value",
+    delivery: "Delivery",
+  };
   return (
     <li
-      className="lift-in grid grid-cols-[12px_minmax(0,1fr)] gap-3 border-t border-[#e5e9e5] py-5 first:border-t-0 first:pt-0 last:pb-0"
+      className="lift-in grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-t border-[#e5e9e5] py-5 first:border-t-0 first:pt-0 last:pb-0"
       style={{ animationDelay: `${index * 55}ms` }}
     >
       <span
-        className="mt-2 h-2 w-2 rounded-full bg-[#1f5638] ring-4 ring-[#e7efcf]"
-        aria-hidden="true"
-      />
+        className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold tabular-nums ${offer.ranking.rank === 1 ? "bg-[#dff45c] text-[#123e28] ring-4 ring-[#f2f8c8]" : "border border-[#d7ded8] bg-[#f6f8f4] text-[#526159]"}`}
+        aria-label={`Rank ${offer.ranking.rank}`}
+      >
+        #{offer.ranking.rank}
+      </span>
       <article>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -217,10 +226,48 @@ function ProductListItem({
               {offer.rating} ({offer.reviewCount.toLocaleString()})
             </p>
           </div>
-          <p className="shrink-0 text-xl font-extrabold tabular-nums">
-            S${offer.price.toFixed(2)}
-          </p>
+          <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
+            <p className="text-xl font-extrabold tabular-nums">
+              S${offer.price.toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs font-extrabold tabular-nums text-[#1f5638]">
+              {offer.ranking.overallScore}/100 procurement score
+            </p>
+          </div>
         </div>
+        <p className="mt-3 text-sm font-bold leading-5 text-[#31563d]">
+          {offer.ranking.summary}
+        </p>
+        <dl
+          className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"
+          aria-label={`Ranking factors for ${offer.title}`}
+        >
+          {(Object.keys(factorLabels) as Array<keyof RankingFactors>).map(
+            (factor) => (
+              <div
+                key={factor}
+                className="rounded-lg border border-[#e1e6e1] bg-[#f8faf7] px-2.5 py-2"
+              >
+                <div className="flex items-center justify-between gap-2 text-[11px] font-extrabold">
+                  <dt className="text-[#667269]">{factorLabels[factor]}</dt>
+                  <dd className="tabular-nums text-[#26372d]">
+                    {offer.ranking.factors[factor]}
+                  </dd>
+                </div>
+                <div
+                  className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#e4e9e3]"
+                  role="img"
+                  aria-label={`${factorLabels[factor]} score ${offer.ranking.factors[factor]} out of 100`}
+                >
+                  <span
+                    className="block h-full rounded-full bg-[#6f8f48]"
+                    style={{ width: `${offer.ranking.factors[factor]}%` }}
+                  />
+                </div>
+              </div>
+            ),
+          )}
+        </dl>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-5 text-[#5f6b64] marker:text-[#8da09a]">
           <li>
             <span className="font-bold text-[#2d3832]">Why it fits:</span>{" "}
@@ -252,7 +299,7 @@ function ProductListItem({
             className="focus-ring flex h-11 items-center gap-2 rounded-full bg-[#1f5638] px-4 text-sm font-extrabold text-white transition hover:bg-[#123e28]"
             aria-label={`Pick ${offer.title}`}
           >
-            Pick this <Icon name="arrow" className="h-4 w-4" />
+            Select #{offer.ranking.rank} <Icon name="arrow" className="h-4 w-4" />
           </button>
         </div>
       </article>
@@ -550,7 +597,8 @@ function PurchasePanel({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-[#67716b]">
-                    {offer.merchant}
+                    Rank #{offer.ranking.rank} · {offer.ranking.overallScore}/100
+                    score · {offer.merchant}
                   </p>
                   <h3 className="mt-1 font-extrabold">{offer.title}</h3>
                   <p className="mt-1 text-xs text-[#67716b]">
@@ -941,10 +989,10 @@ export function CommerceWorkspace({
                         <div className="flex flex-col gap-2 border-b border-[#e5e9e5] pb-4 sm:flex-row sm:items-end sm:justify-between">
                           <div>
                             <p className="text-[10px] font-extrabold uppercase tracking-[.13em] text-[#1f5638]">
-                              Recommended products
+                              Ranked products
                             </p>
                             <h2 className="mt-1 text-xl font-extrabold tracking-[-.03em]">
-                              Pick one and I&apos;ll check out
+                              Compare, select, then I&apos;ll check out
                             </h2>
                           </div>
                           <div className="text-xs font-semibold leading-5 text-[#6b766f] sm:text-right">
@@ -957,8 +1005,27 @@ export function CommerceWorkspace({
                             </p>
                           </div>
                         </div>
+                        {data.offers.length > 0 && (
+                          <details className="mt-4 rounded-xl border border-[#dfe5df] bg-[#f7f9f5] px-3.5 py-3 text-xs text-[#59665e]">
+                            <summary className="focus-ring cursor-pointer rounded-md font-extrabold text-[#31563d]">
+                              How procurement ranking works
+                            </summary>
+                            <p className="mt-2 leading-5">
+                              Trust screening is mandatory. Passing products are
+                              then ranked using your request priorities: trust{" "}
+                              {data.offers[0].ranking.weights.trust}%, quality{" "}
+                              {data.offers[0].ranking.weights.quality}%, value{" "}
+                              {data.offers[0].ranking.weights.value}%, and delivery{" "}
+                              {data.offers[0].ranking.weights.delivery}%. Ties favor
+                              the safer seller, then the lower price.
+                            </p>
+                          </details>
+                        )}
                         {data.offers.length ? (
-                          <ul className="mt-5">
+                          <ol
+                            className="mt-5"
+                            aria-label="Products ranked best to worst"
+                          >
                             {data.offers.map((offer, index) => (
                               <ProductListItem
                                 key={offer.id}
@@ -967,7 +1034,7 @@ export function CommerceWorkspace({
                                 onBuy={setSelected}
                               />
                             ))}
-                          </ul>
+                          </ol>
                         ) : (
                           <div className="py-10 text-center">
                             <p className="font-extrabold">
