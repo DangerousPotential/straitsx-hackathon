@@ -2,6 +2,8 @@
 
 A Manifest V3 companion that verifies a live Shopee price before AgentLane can issue a non-spendable StraitsX Fuji sandbox Visa.
 
+AgentLane production app: [https://straitsx-hackathon.vercel.app](https://straitsx-hackathon.vercel.app)
+
 ## Flow
 
 1. Start from an AgentLane Shopee handoff. When Shopee reaches `shopee.sg/cart` with selected items, the extension activates the exact **Check Out** control once; it never selects or changes cart items.

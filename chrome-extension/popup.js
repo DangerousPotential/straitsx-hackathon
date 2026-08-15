@@ -10,6 +10,7 @@ const contextStorageKey = "agentlaneProcurementContext";
 const checkoutStorageKey = "agentlaneShopeeCheckout";
 const pendingCheckoutStorageKey = "agentlanePendingShopeeCheckout";
 const checkoutMaxAgeMs = 30 * 60 * 1000;
+const agentLaneOrigin = "https://straitsx-hackathon.vercel.app";
 let activeTab;
 let activeUrl;
 let sandboxCard;
@@ -23,7 +24,7 @@ function showSection(section) {
   [elements.unsupported, elements.agentlane, elements.issuedCard, elements.capture, elements.noCard, elements.livePrice, elements.cardReady, elements.complete, elements.paymentComplete].forEach((element) => { element.hidden = element !== section; });
 }
 function hostMatches(url, hostname) { return url.hostname === hostname || url.hostname.endsWith(`.${hostname}`); }
-function isAgentLane(url) { return url.hostname === "localhost" || url.hostname === "127.0.0.1"; }
+function isAgentLane(url) { return url.origin === agentLaneOrigin || url.hostname === "localhost" || url.hostname === "127.0.0.1"; }
 function isStraitsCard(url) { return hostMatches(url, "straitsx.ai") && /card/i.test(`${url.hostname}${url.pathname}`); }
 function isShopee(url) { return url.protocol === "https:" && hostMatches(url, "shopee.sg"); }
 function isShopeeCardForm(url) { return url.hostname === "pay.shopee.sg" && url.pathname.startsWith("/payment-v2/add-card"); }
@@ -472,7 +473,7 @@ function renderCheckoutState(checkout) {
     elements.checkoutCardCopy.textContent = "Create a checkout-sized purchase card, then return to Shopee to fill it.";
     if (procurementContext) {
       const quote = { version: 1, offerId: procurementContext.offerId, title: procurementContext.title, checkoutTotalSgd: checkout.totalSgd, source: "checkout_total", capturedAt: checkout.capturedAt };
-      elements.useAgentLane.href = `http://localhost:3001/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.href = `${agentLaneOrigin}/#lastMile=${encodePayload(quote)}`;
       elements.useAgentLane.textContent = `Purchase now · S$${checkout.totalSgd.toFixed(2)}`;
       elements.useAgentLane.hidden = false;
     }
@@ -629,7 +630,7 @@ async function refreshLivePrice() {
     elements.quotePrice.textContent = `S$${amount.toFixed(2)}`;
     elements.quoteResult.hidden = false;
     if (checkoutMode) {
-      elements.useAgentLane.href = `http://localhost:3001/#lastMile=${encodePayload(quote)}`;
+      elements.useAgentLane.href = `${agentLaneOrigin}/#lastMile=${encodePayload(quote)}`;
       elements.useAgentLane.textContent = `Purchase now · S$${amount.toFixed(2)}`;
       elements.useAgentLane.hidden = Boolean(sandboxCard);
     } else {

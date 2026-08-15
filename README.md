@@ -128,6 +128,10 @@ flowchart TB
 
 ## Run the demo
 
+Deployed app: [https://straitsx-hackathon.vercel.app](https://straitsx-hackathon.vercel.app)
+
+> **Chrome extension required:** Before trying the full checkout demo, please install the AgentLane Card Companion by following the [Load Card Companion](#3-load-card-companion) steps below. The extension verifies Shopee's final checkout total and connects the browser checkout flow back to AgentLane.
+
 ### Prerequisites
 
 - Node.js 20+
@@ -166,7 +170,7 @@ Environment behavior:
 
 ### 2. Start AgentLane on port 3001
 
-The current Card Companion handoff points to `http://localhost:3001`.
+The Card Companion returns production handoffs to `https://straitsx-hackathon.vercel.app`. Localhost remains accepted while developing the extension.
 
 ```bash
 npm run dev -- --port 3001

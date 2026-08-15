@@ -2,6 +2,7 @@ const legacyAutoCheckoutStorageKey = "agentlaneShopeeAutoCheckout";
 const contextStorageKey = "agentlaneProcurementContext";
 const pendingCheckoutStorageKey = "agentlanePendingShopeeCheckout";
 const cartTakeoverStorageKey = "agentlaneCartTakeover";
+const agentLaneOrigin = "https://straitsx-hackathon.vercel.app";
 let handledCheckoutUrl = "";
 let handledCartUrl = "";
 
@@ -204,7 +205,7 @@ function showCheckoutBanner(checkout) {
   copy.textContent = "Shopee's final total is captured. Card Companion is opening so you can choose a card.";
   copy.style.cssText = "margin:5px 0 0;color:#637068;font-size:12px";
   const link = document.createElement("a");
-  link.href = `http://localhost:3001/#lastMile=${encodeAgentLanePayload(quote)}`;
+  link.href = `${agentLaneOrigin}/#lastMile=${encodeAgentLanePayload(quote)}`;
   link.target = "_blank";
   link.rel = "noreferrer";
   link.textContent = `Purchase now · S$${checkout.totalSgd.toFixed(2)}`;

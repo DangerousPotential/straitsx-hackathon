@@ -44,6 +44,7 @@ for (const [file, forbidden] of [
 
 const popupSource = await readFile(resolve(root, "popup.js"), "utf8");
 for (const required of [
+  'https://straitsx-hackathon.vercel.app',
   'chrome.storage.session',
   'agentlaneShopeeCheckout',
   'agentlanePendingShopeeCheckout',
@@ -76,7 +77,7 @@ for (const required of [
 }
 
 const verifierSource = await readFile(resolve(root, "price-verifier.js"), "utf8");
-for (const required of ["verify_price", "readStructuredProductPrice", "waitForStructuredProductPrice", "Live price verified", "captureCheckoutTotal", "checkout_total", "Purchase now", "agentlanePendingShopeeCheckout", "agentlane_checkout_captured", "shopee-cart", "Total Payment\\s*:?", "observedLocation", "handleShopeeRoute", "agentlaneCartTakeover", "continueFromAgentLaneCart", "Opening checkout"]) {
+for (const required of ["https://straitsx-hackathon.vercel.app", "verify_price", "readStructuredProductPrice", "waitForStructuredProductPrice", "Live price verified", "captureCheckoutTotal", "checkout_total", "Purchase now", "agentlanePendingShopeeCheckout", "agentlane_checkout_captured", "shopee-cart", "Total Payment\\s*:?", "observedLocation", "handleShopeeRoute", "agentlaneCartTakeover", "continueFromAgentLaneCart", "Opening checkout"]) {
   if (!verifierSource.includes(required)) failures.push(`price-verifier.js is missing checkout-first safeguard: ${required}`);
 }
 for (const forbidden of ["autoCheckout === true", "buyNow.click", "expectedPriceSgd", "Step 1 of 3"]) {
