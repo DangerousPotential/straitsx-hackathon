@@ -77,6 +77,8 @@ const steps = [
   ["04", "Authorize, then confirm", "Create a checkout-sized sandbox card and keep final payment behind your explicit action."],
 ];
 
+const roadmapPlatforms = ["Lazada", "RedMart", "Amazon"];
+
 export function LandingPage() {
   return (
     <main className="landing-shell min-h-dvh overflow-hidden bg-[#f6f7f2] text-[#17241d]">
@@ -97,6 +99,7 @@ export function LandingPage() {
           <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex">
             <a href="#features" className="focus-ring rounded-md text-sm font-bold text-[#526159] transition-colors hover:text-[#17241d]">Features</a>
             <a href="#how-it-works" className="focus-ring rounded-md text-sm font-bold text-[#526159] transition-colors hover:text-[#17241d]">How it works</a>
+            <a href="#roadmap" className="focus-ring rounded-md text-sm font-bold text-[#526159] transition-colors hover:text-[#17241d]">Roadmap</a>
             <a href="#safety" className="focus-ring rounded-md text-sm font-bold text-[#526159] transition-colors hover:text-[#17241d]">Safety</a>
           </nav>
 
@@ -217,6 +220,35 @@ export function LandingPage() {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section id="roadmap" className="scroll-mt-24 border-b border-[#dfe4df] bg-white/65 px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+          <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
+            <div>
+              <p className="section-kicker">Marketplace roadmap</p>
+              <h2 className="mt-4 max-w-xl text-[clamp(2.35rem,4.5vw,4.2rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">More shops. The same guarded lane.</h2>
+              <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[#667269] sm:text-lg sm:leading-8">Shopee is the starting point. We plan to extend AgentLane&apos;s structured product discovery and checkout flow across more major marketplaces.</p>
+            </div>
+
+            <div>
+              <ol className="grid gap-3 sm:grid-cols-3" aria-label="Planned marketplace integrations">
+                {roadmapPlatforms.map((platform, index) => (
+                  <li key={platform} className="rounded-[22px] border border-[#d9e1da] bg-[#f8faf4] p-5 shadow-[0_10px_30px_rgba(23,36,29,.04)] sm:min-h-[164px]">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf3dc] text-[#1f5638]"><Icon name="globe" className="h-5 w-5" /></span>
+                      <span className="rounded-full border border-[#ccd8c8] bg-white px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-[#526159]">Planned</span>
+                    </div>
+                    <p className="mt-7 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#849087]">Next {String(index + 1).padStart(2, "0")}</p>
+                    <h3 className="mt-1 text-xl font-extrabold tracking-[-.035em]">{platform}</h3>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[#dce3dc] bg-white px-4 py-3.5 text-sm font-semibold leading-6 text-[#5f6b64]">
+                <Icon name="lock" className="mt-0.5 h-4 w-4 shrink-0 text-[#31563d]" />
+                These shops require company approval before structured product access can be enabled.
+              </p>
+            </div>
           </div>
         </section>
 
