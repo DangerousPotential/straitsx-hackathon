@@ -1,0 +1,181 @@
+<mxfile host="app.diagrams.net" modified="2026-08-16T00:00:00.000Z" agent="Codex" version="24.7.17" type="device" pages="2">
+  <diagram id="system-overview" name="1. System Architecture">
+    <mxGraphModel dx="1500" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="AgentLane — Stablecoin-Native Commerce Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=30;fontStyle=1;fontColor=#17241D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="25" width="900" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="AI procurement + verified checkout + self-custodial XSGD authorization + verifiable onchain settlement" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontColor=#52605A;" vertex="1" parent="1">
+          <mxGeometry x="40" y="67" width="1000" height="28" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="browser-boundary" value="CLIENT · USER'S CHROME BROWSER" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;arcSize=12;fillColor=#EAF2FF;swimlaneFillColor=#F8FBFF;strokeColor=#6C8EBF;fontColor=#24476B;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="115" width="455" height="790" as="geometry"/>
+        </mxCell>
+        <mxCell id="vercel-boundary" value="APPLICATION · VERCEL" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;arcSize=12;fillColor=#E7F5EC;swimlaneFillColor=#FBFEFC;strokeColor=#4E9B69;fontColor=#123E28;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="520" y="115" width="430" height="790" as="geometry"/>
+        </mxCell>
+        <mxCell id="external-boundary" value="MARKETPLACE · AI · STABLECOIN PAYMENT RAILS" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;arcSize=12;fillColor=#FFF1DF;swimlaneFillColor=#FFFCF8;strokeColor=#D79B00;fontColor=#7A4C00;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="975" y="115" width="570" height="790" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="user" value="&lt;b&gt;Sovereign User&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Owns wallet authorization&lt;br&gt;and execution consent&lt;/font&gt;" style="shape=actor;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;strokeColor=#24476B;fillColor=#DAE8FC;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="175" width="140" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-ui" value="&lt;b&gt;AgentLane Web UI&lt;/b&gt;&lt;br&gt;Next.js 16 · React 19&lt;br&gt;&lt;font color='#52605A'&gt;Procurement workspace&lt;br&gt;card issuance experience&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#17241D;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="215" y="165" width="240" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="metamask" value="&lt;b&gt;Self-Custodial MetaMask Wallet&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;EIP-712 typed data · EIP-3009&lt;br&gt;gasless XSGD authorization&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontColor=#17241D;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="215" y="295" width="240" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="extension-group" value="CARD COMPANION · CHROME MV3" style="swimlane;html=1;startSize=30;horizontal=1;rounded=1;arcSize=10;fillColor=#E1D5E7;swimlaneFillColor=#FCFAFD;strokeColor=#9673A6;fontColor=#563A63;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="420" width="385" height="390" as="geometry"/>
+        </mxCell>
+        <mxCell id="content-script" value="&lt;b&gt;Price Verifier&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Shopee route guard&lt;br&gt;authoritative total capture&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="90" y="475" width="155" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="popup" value="&lt;b&gt;Popup UI&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Card vault, selection,&lt;br&gt;review and confirmation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="275" y="475" width="155" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="service-worker" value="&lt;b&gt;Policy Execution Worker&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Price-bound verification&lt;br&gt;deterministic checkout actions&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="90" y="585" width="155" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser-storage" value="&lt;b&gt;Private Client-Side Card Vault&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Masked card portfolio&lt;br&gt;checkout-bound session context&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="275" y="585" width="155" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-storage" value="&lt;b&gt;Browser Web Storage&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Search state + short-lived issued-card handoff&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="90" y="710" width="340" height="75" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="frontend" value="&lt;b&gt;Next.js Frontend&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Server-rendered shell + client workflow&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=13;arcSize=14;" vertex="1" parent="1">
+          <mxGeometry x="555" y="165" width="360" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="search-api" value="&lt;b&gt;POST /api/search&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Intent · live discovery&lt;br&gt;structured review · ranking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="555" y="275" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="policy" value="&lt;b&gt;Policy &amp; Trust Layer&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Budget + fee reserve&lt;br&gt;provider cap · trust screen&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="745" y="275" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="local-catalog" value="&lt;b&gt;Resilient Discovery Mode&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Deterministic local catalogue + ranking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontColor=#17241D;fontSize=12;arcSize=12;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="555" y="395" width="360" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="quote-api" value="&lt;b&gt;POST /api/cards/sandbox/quote&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Validate request · obtain HTTP 402 challenge&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="555" y="500" width="360" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="issue-api" value="&lt;b&gt;POST /api/cards/sandbox/issue&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Revalidate amount · forward signed authorization&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="555" y="590" width="360" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="recover-api" value="&lt;b&gt;POST /api/cards/sandbox/recover&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Recover by opaque card ID, settlement tx, wallet&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="555" y="680" width="360" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="env" value="&lt;b&gt;Server-Isolated Credentials&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;OpenAI · BuyWhere · programmable policy limits&lt;br&gt;Protected within the Vercel execution boundary&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#E7F5EC;strokeColor=#4E9B69;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="555" y="785" width="360" height="85" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="buywhere" value="&lt;b&gt;BuyWhere API&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Live Singapore marketplace listings&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="165" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="openai" value="&lt;b&gt;OpenAI Responses API&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Strict structured listing review&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="165" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="shopee" value="&lt;b&gt;Shopee Singapore&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Product · cart · checkout&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=13;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="290" width="220" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="shopee-pay" value="&lt;b&gt;Shopee Pay Secure Page&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Add Card form + saved-card selection&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="290" width="220" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="mcp" value="&lt;b&gt;StraitsX Card MCP&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;get_card_sandbox&lt;br&gt;view_card_sandbox · SSE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="455" width="220" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="card-api" value="&lt;b&gt;StraitsX x402 Card API&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;HTTP 402 payment challenge&lt;br&gt;checkout-matched virtual card issuance&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#17241D;fontSize=12;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="455" width="220" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="avalanche-mainnet" value="&lt;b&gt;Avalanche C-Chain&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;Read XSGD wallet balance&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="625" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="fuji" value="&lt;b&gt;Avalanche Fuji C-Chain&lt;/b&gt;&lt;br&gt;&lt;font color='#52605A'&gt;XSGD EIP-3009 authorization&lt;br&gt;verifiable x402 onchain settlement&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="615" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="sandbox-note" value="&lt;b&gt;Stablecoin-Native Payment Primitive&lt;/b&gt;&lt;br&gt;&lt;font color='#7A4C00'&gt;x402 challenge + self-custodial XSGD authorization + verifiable Fuji settlement&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontColor=#17241D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="780" width="490" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e-user-ui" value="request, budget&lt;br&gt;explicit approvals" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#6C8EBF;fontColor=#24476B;fontSize=11;" edge="1" parent="1" source="user" target="web-ui"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-ui-front" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#4E9B69;fontColor=#123E28;fontSize=11;" edge="1" parent="1" source="web-ui" target="frontend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-front-search" value="search request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#4E9B69;fontSize=11;" edge="1" parent="1" source="frontend" target="search-api"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-search-policy" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#D6B656;fontSize=11;" edge="1" parent="1" source="search-api" target="policy"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-search-buy" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="search-api" target="buywhere"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="640" y="255"/><mxPoint x="1120" y="255"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-search-ai" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;fontSize=11;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="search-api" target="openai"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="640" y="250"/><mxPoint x="1390" y="250"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-search-local" value="resilient mode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#666666;fontSize=11;dashed=1;" edge="1" parent="1" source="search-api" target="local-catalog"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-ui-shopee" value="verified listing handoff" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;fontSize=11;exitX=0.5;exitY=0;entryX=1;entryY=0.5;" edge="1" parent="1" source="web-ui" target="shopee"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="335" y="150"/><mxPoint x="1245" y="150"/><mxPoint x="1245" y="327"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-shopee-content" value="live merchant verification + policy execution" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontSize=11;" edge="1" parent="1" source="extension-group" target="shopee"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="475" y="895"/><mxPoint x="990" y="895"/><mxPoint x="990" y="330"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-popup-storage" value="masked cards + context" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontSize=11;" edge="1" parent="1" source="popup" target="browser-storage"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-ui-storage" value="scoped local + session state" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#6C8EBF;fontSize=11;" edge="1" parent="1" source="web-ui" target="web-storage"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-ui-wallet" value="connect + sign request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#D6B656;fontSize=11;" edge="1" parent="1" source="web-ui" target="metamask"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-quote-mcp" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#B85450;fontSize=11;" edge="1" parent="1" source="quote-api" target="mcp"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e-quote-card" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#B85450;fontSize=11;exitX=1;exitY=0;entryX=0.5;entryY=0;" edge="1" parent="1" source="quote-api" target="card-api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="930" y="440"/><mxPoint x="1390" y="440"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-issue-card" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#B85450;fontSize=11;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="issue-api" target="card-api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1390" y="620"/></Array></mxGeometry></mxCell>
+        <mxCell id="e-card-fuji" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#B85450;fontSize=11;" edge="1" parent="1" source="card-api" target="fuji"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="privacy-stateless" value="&lt;b&gt;Privacy-First Stateless Architecture&lt;/b&gt; · scoped client persistence minimizes centralized data custody." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontColor=#17241D;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="935" width="600" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt; &#160; &lt;font color='#24476B'&gt;■ Browser&lt;/font&gt; &#160; &lt;font color='#123E28'&gt;■ Vercel app&lt;/font&gt; &#160; &lt;font color='#7A4C00'&gt;■ Marketplace / AI&lt;/font&gt; &#160; &lt;font color='#9A312E'&gt;■ Stablecoin / blockchain&lt;/font&gt; &#160; - - adaptive path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B7C0BA;fontColor=#52605A;fontSize=12;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="935" width="875" height="55" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="purchase-flow" name="2. Verified Purchase Flow">
+    <mxGraphModel dx="1600" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="p0"/>
+        <mxCell id="p1" parent="p0"/>
+        <mxCell id="p-title" value="AgentLane — Self-Custodial x402 Purchase Flow" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=28;fontStyle=1;fontColor=#17241D;" vertex="1" parent="p1"><mxGeometry x="40" y="25" width="1100" height="45" as="geometry"/></mxCell>
+        <mxCell id="p-subtitle" value="Programmable commerce policy, merchant-verified pricing, gasless XSGD authorization, and onchain settlement" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontColor=#52605A;" vertex="1" parent="p1"><mxGeometry x="40" y="66" width="1100" height="28" as="geometry"/></mxCell>
+
+        <mxCell id="lane-user" value="USER" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#EAF2FF;swimlaneFillColor=#F8FBFF;strokeColor=#6C8EBF;fontColor=#24476B;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="40" y="115" width="190" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-web" value="AGENTLANE WEB" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#E7F5EC;swimlaneFillColor=#FBFEFC;strokeColor=#4E9B69;fontColor=#123E28;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="250" y="115" width="210" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-api" value="NEXT.JS API + POLICY" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#E7F5EC;swimlaneFillColor=#FBFEFC;strokeColor=#4E9B69;fontColor=#123E28;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="480" y="115" width="220" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-discovery" value="BUYWHERE + OPENAI" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#FFF1DF;swimlaneFillColor=#FFFCF8;strokeColor=#D79B00;fontColor=#7A4C00;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="720" y="115" width="210" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-extension" value="CARD COMPANION" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#E1D5E7;swimlaneFillColor=#FCFAFD;strokeColor=#9673A6;fontColor=#563A63;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="950" y="115" width="220" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-shopee" value="SHOPEE / SHOPEE PAY" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#FFF1DF;swimlaneFillColor=#FFFCF8;strokeColor=#D79B00;fontColor=#7A4C00;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="1190" y="115" width="220" height="760" as="geometry"/></mxCell>
+        <mxCell id="lane-payment" value="METAMASK + STRAITSX + FUJI" style="swimlane;html=1;startSize=34;horizontal=1;rounded=1;fillColor=#FDE9E7;swimlaneFillColor=#FFF9F8;strokeColor=#B85450;fontColor=#9A312E;fontStyle=1;fontSize=12;" vertex="1" parent="p1"><mxGeometry x="1430" y="115" width="230" height="760" as="geometry"/></mxCell>
+
+        <mxCell id="p-user" value="&lt;b&gt;Sovereign approvals&lt;/b&gt;&lt;br&gt;Selects product&lt;br&gt;Signs from own wallet&lt;br&gt;Confirms payment" style="shape=actor;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;strokeColor=#24476B;fillColor=#DAE8FC;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="85" y="175" width="100" height="110" as="geometry"/></mxCell>
+        <mxCell id="p-web" value="&lt;b&gt;Procurement workspace&lt;/b&gt;&lt;br&gt;Recommendation + issuance UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="275" y="175" width="160" height="75" as="geometry"/></mxCell>
+        <mxCell id="p-api" value="&lt;b&gt;Stateless APIs&lt;/b&gt;&lt;br&gt;Search · quote · issue · recover" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="510" y="175" width="160" height="75" as="geometry"/></mxCell>
+        <mxCell id="p-discovery" value="&lt;b&gt;Live discovery&lt;/b&gt;&lt;br&gt;AI structured review" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="745" y="175" width="160" height="75" as="geometry"/></mxCell>
+        <mxCell id="p-extension" value="&lt;b&gt;MV3 extension&lt;/b&gt;&lt;br&gt;Verifier · vault · worker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="980" y="175" width="160" height="75" as="geometry"/></mxCell>
+        <mxCell id="p-shopee" value="&lt;b&gt;Merchant checkout&lt;/b&gt;&lt;br&gt;Authoritative final total" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="1220" y="175" width="160" height="75" as="geometry"/></mxCell>
+        <mxCell id="p-payment" value="&lt;b&gt;x402 stablecoin rail&lt;/b&gt;&lt;br&gt;Self-custodial signing + onchain settlement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontColor=#17241D;fontSize=11;" vertex="1" parent="p1"><mxGeometry x="1465" y="175" width="160" height="75" as="geometry"/></mxCell>
+
+        <mxCell id="m1" value="1 · Shopping request + max budget" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#6C8EBF;fontColor=#24476B;fontSize=11;" edge="1" parent="p1" source="p-user" target="p-web"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="230" y="300"/><mxPoint x="355" y="300"/></Array></mxGeometry></mxCell>
+        <mxCell id="m2" value="2 · Parse intent; enforce effective budget" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#4E9B69;fontColor=#123E28;fontSize=11;" edge="1" parent="p1" source="p-web" target="p-api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="460" y="340"/><mxPoint x="590" y="340"/></Array></mxGeometry></mxCell>
+        <mxCell id="m3" value="3 · Live listings + structured review" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#D79B00;fontColor=#7A4C00;fontSize=11;" edge="1" parent="p1" source="p-api" target="p-discovery"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="700" y="380"/><mxPoint x="825" y="380"/></Array></mxGeometry></mxCell>
+        <mxCell id="m4" value="4 · Ranked offers after trust screen" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#4E9B69;fontColor=#123E28;fontSize=11;" edge="1" parent="p1" source="p-api" target="p-web"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="590" y="420"/><mxPoint x="355" y="420"/></Array></mxGeometry></mxCell>
+        <mxCell id="m5a" value="5 · User selects offer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#6C8EBF;fontColor=#24476B;fontSize=11;" edge="1" parent="p1" source="p-user" target="p-web"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="135" y="460"/><mxPoint x="355" y="460"/></Array></mxGeometry></mxCell>
+        <mxCell id="m5b" value="Listing handoff: offer ID + listing URL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;fontColor=#7A4C00;fontSize=11;" edge="1" parent="p1" source="p-web" target="p-shopee"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="355" y="500"/><mxPoint x="1300" y="500"/></Array></mxGeometry></mxCell>
+        <mxCell id="m6" value="6 · Observe cart/checkout; capture labeled final total" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontColor=#563A63;fontSize=11;" edge="1" parent="p1" source="p-extension" target="p-shopee"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1060" y="540"/><mxPoint x="1300" y="540"/></Array></mxGeometry></mxCell>
+        <mxCell id="m7" value="7 · Verified checkout-total attestation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontColor=#563A63;fontSize=11;" edge="1" parent="p1" source="p-extension" target="p-web"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1060" y="580"/><mxPoint x="355" y="580"/></Array></mxGeometry></mxCell>
+        <mxCell id="m8" value="8 · Quote request + programmable policy attestation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#4E9B69;fontColor=#123E28;fontSize=11;" edge="1" parent="p1" source="p-web" target="p-api"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="355" y="620"/><mxPoint x="590" y="620"/></Array></mxGeometry></mxCell>
+        <mxCell id="m9" value="9 · MCP instruction → HTTP 402 requirement" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#B85450;fontColor=#9A312E;fontSize=11;" edge="1" parent="p1" source="p-api" target="p-payment"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="590" y="660"/><mxPoint x="1545" y="660"/></Array></mxGeometry></mxCell>
+        <mxCell id="m10" value="10 · Self-custodial EIP-712 signature; gasless EIP-3009 authorization" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#B85450;fontColor=#9A312E;fontSize=11;" edge="1" parent="p1" source="p-user" target="p-payment"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="135" y="700"/><mxPoint x="1545" y="700"/></Array></mxGeometry></mxCell>
+        <mxCell id="m11" value="11 · x402 payment proof → card issuance → verifiable Fuji settlement" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#B85450;fontColor=#9A312E;fontSize=11;" edge="1" parent="p1" source="p-api" target="p-payment"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="590" y="740"/><mxPoint x="1545" y="740"/></Array></mxGeometry></mxCell>
+        <mxCell id="m12a" value="12 · Checkout-matched virtual card returned" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#B85450;fontColor=#9A312E;fontSize=11;" edge="1" parent="p1" source="p-payment" target="p-web"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1545" y="780"/><mxPoint x="355" y="780"/></Array></mxGeometry></mxCell>
+        <mxCell id="m12b" value="Private client handoff → masked card vault" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontColor=#563A63;fontSize=11;dashed=1;" edge="1" parent="p1" source="p-web" target="p-extension"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="355" y="800"/><mxPoint x="1060" y="800"/></Array></mxGeometry></mxCell>
+        <mxCell id="m13" value="13 · Precision card autofill · merchant-total attestation · sovereign Confirm and pay" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;strokeColor=#9673A6;fontColor=#563A63;fontSize=11;" edge="1" parent="p1" source="p-extension" target="p-shopee"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1060" y="820"/><mxPoint x="1300" y="820"/></Array></mxGeometry></mxCell>
+
+        <mxCell id="guard-title" value="CRYPTO-NATIVE PRIMITIVES" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#17241D;" vertex="1" parent="p1"><mxGeometry x="40" y="910" width="300" height="25" as="geometry"/></mxCell>
+        <mxCell id="g1" value="&lt;b&gt;Programmable Commerce Policy&lt;/b&gt;&lt;br&gt;User-defined spending policy, provider limits, and fee reserve compose across search, quote, and issuance." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontColor=#17241D;fontSize=11;arcSize=10;" vertex="1" parent="p1"><mxGeometry x="40" y="945" width="375" height="85" as="geometry"/></mxCell>
+        <mxCell id="g2" value="&lt;b&gt;Merchant-Verified Price Integrity&lt;/b&gt;&lt;br&gt;Card value binds to Shopee's rendered final total and is revalidated at execution time." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EAF7;strokeColor=#9673A6;fontColor=#17241D;fontSize=11;arcSize=10;" vertex="1" parent="p1"><mxGeometry x="435" y="945" width="375" height="85" as="geometry"/></mxCell>
+        <mxCell id="g3" value="&lt;b&gt;Privacy-First Key Separation&lt;/b&gt;&lt;br&gt;Credentials stay server-isolated, card data stays client-side, and private keys remain in the user's wallet." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#6C8EBF;fontColor=#17241D;fontSize=11;arcSize=10;" vertex="1" parent="p1"><mxGeometry x="830" y="945" width="390" height="85" as="geometry"/></mxCell>
+        <mxCell id="g4" value="&lt;b&gt;Sovereign User Authorization&lt;/b&gt;&lt;br&gt;The user owns product choice, XSGD authorization, card selection, and final execution consent." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDE9E7;strokeColor=#B85450;fontColor=#17241D;fontSize=11;arcSize=10;" vertex="1" parent="p1"><mxGeometry x="1240" y="945" width="420" height="85" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
