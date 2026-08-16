@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { DotGrid } from "@/components/DotGrid";
 import { HandoffRedirect } from "@/components/HandoffRedirect";
+import { ScrollRevealController } from "@/components/ScrollRevealController";
 
 type IconName =
   | "arrow"
@@ -83,6 +85,7 @@ export function LandingPage() {
   return (
     <main className="landing-shell min-h-dvh overflow-hidden bg-[#f6f7f2] text-[#17241d]">
       <HandoffRedirect />
+      <ScrollRevealController />
       <a href="#main-content" className="focus-ring sr-only z-50 bg-white px-4 py-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Skip to content
       </a>
@@ -110,10 +113,12 @@ export function LandingPage() {
       </header>
 
       <div id="main-content">
-        <section className="relative">
-          <div className="landing-grid absolute inset-0 opacity-55" aria-hidden />
-          <div className="absolute left-[6%] top-16 h-64 w-64 rounded-full bg-[#dff45c]/20 blur-3xl" aria-hidden />
-          <div className="relative mx-auto grid max-w-[1180px] items-center gap-14 px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 lg:grid-cols-[1.02fr_.98fr] lg:px-8 lg:pb-32 lg:pt-28">
+        <section className="relative border-b border-[#dfe4df]">
+          <div className="absolute inset-0 overflow-hidden" aria-hidden>
+            <DotGrid className="opacity-80" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(223,244,92,.28),transparent_25rem),linear-gradient(90deg,rgba(246,247,242,.35),rgba(246,247,242,.72)_48%,rgba(246,247,242,.2))]" />
+          </div>
+          <div className="relative z-10 mx-auto grid max-w-[1180px] items-center gap-14 px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 lg:grid-cols-[1.02fr_.98fr] lg:px-8 lg:pb-32 lg:pt-28">
             <div className="max-w-[690px]">
               <div className="lift-in inline-flex min-h-9 items-center gap-2 rounded-full border border-[#cbd8c9] bg-white/80 px-3.5 text-xs font-extrabold uppercase tracking-[.12em] text-[#31563d] shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-[#668d1f]" aria-hidden />
@@ -133,11 +138,12 @@ export function LandingPage() {
                   See how it works <Icon name="chevron" className="h-4 w-4" />
                 </a>
               </div>
-              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-[#67716b]">
-                {["No autonomous purchases", "S$30 sandbox ceiling", "Final action stays yours"].map((item) => (
-                  <span key={item} className="flex items-center gap-2"><Icon name="check" className="h-4 w-4 text-[#4f7621]" />{item}</span>
-                ))}
-              </div>
+              <p className="mt-5 max-w-xl text-sm font-semibold leading-6 text-[#667269]">
+                For the full experience, install the Chrome extension from the{" "}
+                <a href="https://github.com/DangerousPotential/straitsx-hackathon" target="_blank" rel="noreferrer" className="focus-ring rounded-sm font-extrabold text-[#31563d] underline decoration-[#91a18f] underline-offset-4 transition-colors hover:text-[#123e28]">
+                  AgentLane GitHub repository
+                </a>.
+              </p>
             </div>
 
             <div className="hero-console lift-in relative mx-auto w-full max-w-[560px] lg:ml-auto">
@@ -176,25 +182,16 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section aria-label="Technology integrations" className="border-y border-[#dfe4df] bg-white/70">
-          <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-5 px-4 py-7 sm:px-6 lg:flex-row lg:justify-between lg:px-8">
-            <p className="text-center text-[11px] font-extrabold uppercase tracking-[.16em] text-[#7a857d] lg:text-left">One flow across the commerce stack</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-extrabold text-[#435249] sm:gap-x-10">
-              {["BuyWhere", "OpenAI", "StraitsX", "Avalanche Fuji", "Chrome MV3"].map((name) => <span key={name}>{name}</span>)}
-            </div>
-          </div>
-        </section>
-
         <section id="features" className="scroll-mt-24 px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
           <div className="mx-auto max-w-[1180px]">
-            <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
+            <div data-reveal className="grid gap-6 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
               <div><p className="section-kicker">Built for the last mile</p><h2 className="mt-4 max-w-xl text-[clamp(2.5rem,5vw,4.8rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">The useful parts of an agent. None of the blind trust.</h2></div>
               <p className="max-w-xl text-lg font-medium leading-8 text-[#667269] lg:ml-auto">Most shopping assistants stop at recommendations. AgentLane continues through price verification and payment authorization, adding a deliberate checkpoint at every risky boundary.</p>
             </div>
 
             <div className="mt-14 grid gap-4 lg:grid-cols-3">
               {features.map((feature) => (
-                <article key={feature.title} className={`feature-card group min-h-[310px] rounded-[26px] border border-[#dce3dc] bg-white p-6 shadow-[0_14px_40px_rgba(23,36,29,.045)] transition duration-300 hover:-translate-y-1 hover:border-[#b8c8b9] sm:p-8 ${feature.className}`}>
+                <article key={feature.title} data-reveal className={`feature-card group min-h-[310px] rounded-[26px] border border-[#dce3dc] bg-white p-6 shadow-[0_14px_40px_rgba(23,36,29,.045)] transition duration-300 hover:-translate-y-1 hover:border-[#b8c8b9] sm:p-8 ${feature.className}`}>
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf3dc] text-[#1f5638] transition group-hover:bg-[#dff45c]"><Icon name={feature.icon} className="h-6 w-6" /></div>
                   <p className="mt-8 text-[10px] font-extrabold uppercase tracking-[.15em] text-[#6e7a72]">{feature.eyebrow}</p>
                   <h3 className="mt-2 text-2xl font-extrabold tracking-[-.04em]">{feature.title}</h3>
@@ -207,13 +204,13 @@ export function LandingPage() {
 
         <section id="how-it-works" className="scroll-mt-24 bg-[#17241d] px-4 py-24 text-white sm:px-6 sm:py-32 lg:px-8">
           <div className="mx-auto max-w-[1180px]">
-            <div className="grid gap-8 lg:grid-cols-2">
+            <div data-reveal className="grid gap-8 lg:grid-cols-2">
               <div><p className="section-kicker text-[#dff45c]">How it works</p><h2 className="mt-4 max-w-xl text-[clamp(2.5rem,5vw,4.8rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">Four moments. Every one auditable.</h2></div>
               <p className="max-w-xl text-lg font-medium leading-8 text-[#b9c3bc] lg:ml-auto lg:self-end">The agent coordinates the journey. You retain the choices that matter: product, wallet authorization, card, and final confirmation.</p>
             </div>
             <ol className="mt-16 grid gap-px overflow-hidden rounded-[28px] border border-white/12 bg-white/12 md:grid-cols-2 lg:grid-cols-4">
               {steps.map(([number, title, body]) => (
-                <li key={number} className="min-h-[300px] bg-[#17241d] p-7 sm:p-8">
+                <li key={number} data-reveal className="min-h-[300px] bg-[#17241d] p-7 sm:p-8">
                   <span className="font-mono text-xs font-bold text-[#dff45c]">{number}</span>
                   <h3 className="mt-20 text-xl font-extrabold tracking-[-.03em]">{title}</h3>
                   <p className="mt-3 text-sm font-medium leading-6 text-[#aeb9b2]">{body}</p>
@@ -225,7 +222,7 @@ export function LandingPage() {
 
         <section id="roadmap" className="scroll-mt-24 border-b border-[#dfe4df] bg-white/65 px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
-            <div>
+            <div data-reveal="left">
               <p className="section-kicker">Marketplace roadmap</p>
               <h2 className="mt-4 max-w-xl text-[clamp(2.35rem,4.5vw,4.2rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">More shops. The same guarded lane.</h2>
               <p className="mt-5 max-w-xl text-base font-medium leading-7 text-[#667269] sm:text-lg sm:leading-8">Shopee is the starting point. We plan to extend AgentLane&apos;s structured product discovery and checkout flow across more major marketplaces.</p>
@@ -234,7 +231,7 @@ export function LandingPage() {
             <div>
               <ol className="grid gap-3 sm:grid-cols-3" aria-label="Planned marketplace integrations">
                 {roadmapPlatforms.map((platform, index) => (
-                  <li key={platform} className="rounded-[22px] border border-[#d9e1da] bg-[#f8faf4] p-5 shadow-[0_10px_30px_rgba(23,36,29,.04)] sm:min-h-[164px]">
+                  <li key={platform} data-reveal="card" className="rounded-[22px] border border-[#d9e1da] bg-[#f8faf4] p-5 shadow-[0_10px_30px_rgba(23,36,29,.04)] sm:min-h-[164px]">
                     <div className="flex items-center justify-between gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf3dc] text-[#1f5638]"><Icon name="globe" className="h-5 w-5" /></span>
                       <span className="rounded-full border border-[#ccd8c8] bg-white px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] text-[#526159]">Planned</span>
@@ -244,7 +241,7 @@ export function LandingPage() {
                   </li>
                 ))}
               </ol>
-              <p className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[#dce3dc] bg-white px-4 py-3.5 text-sm font-semibold leading-6 text-[#5f6b64]">
+              <p data-reveal className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[#dce3dc] bg-white px-4 py-3.5 text-sm font-semibold leading-6 text-[#5f6b64]">
                 <Icon name="lock" className="mt-0.5 h-4 w-4 shrink-0 text-[#31563d]" />
                 These shops require company approval before structured product access can be enabled.
               </p>
@@ -254,13 +251,13 @@ export function LandingPage() {
 
         <section id="safety" className="scroll-mt-24 px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
           <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
-            <div>
-              <p className="section-kicker">Designed to stop safely</p>
-              <h2 className="mt-4 text-[clamp(2.5rem,5vw,4.8rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">Human control is a feature, not friction.</h2>
-              <p className="mt-6 max-w-xl text-lg font-medium leading-8 text-[#667269]">AgentLane is a hackathon prototype for sandbox infrastructure. Its controls are intentionally visible so judges can inspect what the agent can—and cannot—do.</p>
+            <div data-reveal="left">
+              <p className="section-kicker">Agent-led by design</p>
+              <h2 className="mt-4 text-[clamp(2.5rem,5vw,4.8rem)] font-extrabold leading-[.98] tracking-[-.06em] text-balance">One command. The agent runs the lane.</h2>
+              <p className="mt-6 max-w-xl text-lg font-medium leading-8 text-[#667269]">Give AgentLane an intent and it autonomously coordinates discovery, ranking, checkout verification, policy checks, and payment preparation—bringing you back in only for the final decision that matters.</p>
               <Link href="/agent" className="focus-ring mt-8 inline-flex min-h-12 items-center gap-2 rounded-full border border-[#b9c7ba] bg-white px-5 text-sm font-extrabold text-[#1f5638] transition hover:border-[#7f9784]">Open the live workspace <Icon name="arrow" className="h-4 w-4" /></Link>
             </div>
-            <div className="rounded-[30px] border border-[#d4ddd5] bg-white p-3 shadow-[0_24px_70px_rgba(23,36,29,.08)]">
+            <div data-reveal="right" className="rounded-[30px] border border-[#d4ddd5] bg-white p-3 shadow-[0_24px_70px_rgba(23,36,29,.08)]">
               <div className="rounded-[23px] bg-[#f1f5e6] p-6 sm:p-8">
                 <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1f5638] text-[#dff45c]"><Icon name="lock" /></span><div><p className="font-extrabold">Guardrail status</p><p className="text-xs font-bold text-[#667269]">Active across the entire flow</p></div></div>
                 <ul className="mt-7 space-y-3">
@@ -277,7 +274,7 @@ export function LandingPage() {
         </section>
 
         <section className="px-4 pb-8 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1180px] overflow-hidden rounded-[32px] bg-[#dff45c] px-6 py-14 text-[#123e28] sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between lg:gap-12">
+          <div data-reveal="card" className="mx-auto max-w-[1180px] overflow-hidden rounded-[32px] bg-[#dff45c] px-6 py-14 text-[#123e28] sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between lg:gap-12">
             <div><p className="text-xs font-extrabold uppercase tracking-[.14em]">Ready for a guarded run?</p><h2 className="mt-3 max-w-3xl text-[clamp(2.25rem,5vw,4.6rem)] font-extrabold leading-[.96] tracking-[-.06em] text-balance">Give the agent an intent. Keep the authority.</h2></div>
             <Link href="/agent" className="focus-ring mt-8 inline-flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-[#123e28] px-7 text-base font-extrabold text-white shadow-[0_14px_34px_rgba(18,62,40,.2)] transition hover:-translate-y-0.5 hover:bg-[#17241d] lg:mt-0">Launch AgentLane <Icon name="arrow" /></Link>
           </div>

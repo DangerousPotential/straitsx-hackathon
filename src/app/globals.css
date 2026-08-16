@@ -12,7 +12,15 @@ button,textarea { font:inherit; } button,a { -webkit-tap-highlight-color:transpa
 .lift-in { animation:lift-in .26s ease-out both; }
 @keyframes thinking-dot { 0%,20% { opacity:.2 } 50% { opacity:1 } 100% { opacity:.2 } }
 .thinking-dots::after { content:"..."; display:inline-block; width:1.2em; margin-left:.12em; overflow:hidden; vertical-align:bottom; animation:thinking-dot 1.1s ease-in-out infinite; }
-.landing-grid { background-image:linear-gradient(rgba(31,86,56,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(31,86,56,.055) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black,transparent 82%); }
 .section-kicker { color:#31563d; font-size:.7rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
 .hero-console { animation-delay:.12s; }
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+.reveal-enabled [data-reveal] { opacity:0; transform:translate3d(0,18px,0); transition:opacity .4s ease-out,transform .4s cubic-bezier(.2,.75,.25,1),border-color .3s ease; will-change:opacity,transform; }
+.reveal-enabled [data-reveal="left"] { transform:translate3d(-22px,0,0); }
+.reveal-enabled [data-reveal="right"] { transform:translate3d(22px,0,0); }
+.reveal-enabled [data-reveal="card"] { transform:translate3d(0,18px,0) scale(.975); }
+.reveal-enabled [data-reveal].is-revealed { opacity:1; transform:none; }
+.reveal-enabled .feature-card.is-revealed:hover { transform:translateY(-.25rem); }
+.reveal-enabled .feature-card:nth-child(2),.reveal-enabled #how-it-works li:nth-child(2),.reveal-enabled #roadmap li:nth-child(2) { transition-delay:50ms; }
+.reveal-enabled .feature-card:nth-child(3),.reveal-enabled #how-it-works li:nth-child(3),.reveal-enabled #roadmap li:nth-child(3) { transition-delay:100ms; }
+.reveal-enabled .feature-card:nth-child(4),.reveal-enabled #how-it-works li:nth-child(4) { transition-delay:150ms; }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } [data-reveal] { opacity:1!important; transform:none!important; } }
